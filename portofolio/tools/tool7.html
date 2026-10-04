@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Konverter Satuan</title>
+<link rel="stylesheet" href="ios.css">
+<style>
+  .box{background:var(--cell);border-radius:22px;overflow:hidden;margin-top:18px}
+  .line{padding:16px 18px 14px;position:relative}
+  .line + .line::before{content:"";position:absolute;top:0;left:18px;right:18px;height:.5px;background:var(--sep)}
+  .line select{appearance:none;-webkit-appearance:none;background:rgba(0,122,255,.1);color:var(--blue);border:0;border-radius:999px;padding:6px 28px 6px 14px;font-size:15px;font-weight:600;outline:0;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%23007AFF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center}
+  .line input{display:block;width:100%;border:0;outline:0;background:none;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:6px;min-height:52px}
+  .line input::placeholder{color:var(--label3)}
+  #res{display:block;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:6px;min-height:52px;line-height:52px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;color:var(--blue)}
+  .swap{position:absolute;z-index:2;right:18px;top:-20px;width:40px;height:40px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.08);transition:transform .45s var(--spring)}
+  .swap:active{transform:scale(.9)}
+  .swap.spin{transform:rotate(180deg)}
+  .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin:0 -2px}
+  .chips::-webkit-scrollbar{display:none}
+  .eq{text-align:center;color:var(--label2);font-size:15px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="title">Konverter Satuan</h1>
+  <div class="seg" id="cat"><button type="button">Panjang</button><button type="button">Berat</button><button type="button">Suhu</button><button type="button">Data</button></div>
+
+  <div class="box">
+    <div class="line">
+      <select id="uA" aria-label="Dari satuan"></select>
+      <input type="text" id="vA" inputmode="decimal" value="1" placeholder="0" aria-label="Nilai">
+    </div>
+    <div class="line">
+      <button class="swap" type="button" id="swap" aria-label="Tukar satuan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v16M8 20l-4-4M8 20l4-4M16 20V4M16 4l-4 4M16 4l4 4"/></svg></button>
+      <select id="uB" aria-label="Ke satuan"></select>
+      <span id="res" aria-live="polite">0</span>
+    </div>
+  </div>
+  <p class="eq" id="eq"></p>
+</div>
+<script src="ios.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  // Satuan linear: nilai = faktor terhadap satuan dasar
+  const CATS = [
+    { units: { 'meter (m)': 1, 'kilometer (km)': 1000, 'sentimeter (cm)': .01, 'milimeter (mm)': .001, 'mil': 1609.344, 'kaki (ft)': .3048, 'inci (in)': .0254, 'yard (yd)': .9144 }, a: 'meter (m)', b: 'kaki (ft)' },
+    { units: { 'kilogram (kg)': 1, 'gram (g)': .001, 'miligram (mg)': 1e-6, 'ton': 1000, 'pon (lb)': .45359237, 'ons (oz)': .028349523125 }, a: 'kilogram (kg)', b: 'pon (lb)' },
+    { temp: true, units: { '°C': 0, '°F': 0, 'K': 0 }, a: '°C', b: '°F' },
+    { units: { 'byte (B)': 1, 'kilobyte (KB)': 1024, 'megabyte (MB)': 1048576, 'gigabyte (GB)': 1073741824, 'terabyte (TB)': 1099511627776, 'bit': .125 }, a: 'megabyte (MB)', b: 'kilobyte (KB)' }
+  ];
+  let ci = 0;
+  const toC = (v, u) => u === '°C' ? v : u === '°F' ? (v - 32) * 5 / 9 : v - 273.15;
+  const fromC = (c, u) => u === '°C' ? c : u === '°F' ? c * 9 / 5 + 32 : c + 273.15;
+  const convert = (v, a, b) => { const c = CATS[ci]; return c.temp ? fromC(toC(v, a), b) : v * c.units[a] / c.units[b]; };
+  const fmt = (n) => {
+    if (!isFinite(n)) return '—';
+    const abs = Math.abs(n);
+    if (abs !== 0 && (abs >= 1e12 || abs < 1e-6)) return n.toExponential(4).replace('.', ',');
+    return new Intl.NumberFormat('id-ID', { maximumFractionDigits: abs < 1 ? 8 : 6 }).format(n);
+  };
+  const parse = (s) => { s = s.trim().replace(/\s/g, ''); if (/,/.test(s) && /\./.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(',', '.'); return s === '' || s === '-' ? NaN : Number(s); };
+
+  const fill = (sel, keep) => { sel.innerHTML = ''; Object.keys(CATS[ci].units).forEach((u) => { const o = document.createElement('option'); o.value = o.textContent = u; sel.appendChild(o); }); sel.value = keep; };
+  const calc = () => {
+    const v = parse($('vA').value), a = $('uA').value, b = $('uB').value;
+    if (isNaN(v)) { $('res').textContent = '0'; $('eq').textContent = ''; return; }
+    $('res').textContent = fmt(convert(v, a, b));
+    $('eq').textContent = `${fmt(v)} ${a.replace(/.*\(|\)/g, '') || a} = ${fmt(convert(v, a, b))} ${b.replace(/.*\(|\)/g, '') || b}`;
+  };
+  iOS.seg($('cat'), (i) => { ci = i; fill($('uA'), CATS[i].a); fill($('uB'), CATS[i].b); calc(); });
+  fill($('uA'), CATS[0].a); fill($('uB'), CATS[0].b);
+  ['vA'].forEach((i) => $(i).addEventListener('input', calc));
+  ['uA', 'uB'].forEach((i) => $(i).addEventListener('change', calc));
+  $('swap').onclick = () => { const a = $('uA').value; $('uA').value = $('uB').value; $('uB').value = a; $('swap').classList.toggle('spin'); iOS.buzz(); calc(); };
+  $('res').addEventListener('click', () => iOS.copy($('res').textContent, 'Hasil tersalin ✓'));
+  calc();
+})();
+</script>
+</body>
+</html>
