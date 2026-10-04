@@ -1,0 +1,97 @@
+/* ===== Nazx Tools — iOS design kit (dipakai semua tool) ===== */
+@font-face{font-family:"Myriad Pro";font-weight:400;font-display:swap;src:local("Myriad Pro"),local("MyriadPro-Regular"),url("../fonts/MYRIADPRO-REGULAR.OTF") format("opentype")}
+@font-face{font-family:"Myriad Pro";font-weight:600;font-display:swap;src:local("Myriad Pro Semibold"),local("MyriadPro-Semibold"),url("../fonts/MYRIADPRO-SEMIBOLD.OTF") format("opentype")}
+@font-face{font-family:"Myriad Pro";font-weight:700;font-display:swap;src:local("Myriad Pro Bold"),local("MyriadPro-Bold"),url("../fonts/MYRIADPRO-BOLD.OTF") format("opentype")}
+:root{
+  color-scheme:light;
+  --blue:#007AFF; --green:#34C759; --orange:#FF9500; --red:#FF3B30; --pink:#FF2D55;
+  --purple:#AF52DE; --indigo:#5856D6; --teal:#30B0C7; --yellow:#FFCC00;
+  --bg:#F2F2F7; --cell:#fff; --label:#000; --label2:rgba(60,60,67,.62); --label3:rgba(60,60,67,.3);
+  --sep:rgba(60,60,67,.16); --fill:rgba(120,120,128,.12); --fill2:rgba(120,120,128,.2);
+  --r:16px;
+  --font:"Myriad Pro",-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Myriad Pro",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --spring:cubic-bezier(.32,1.2,.4,1);
+  --ease:cubic-bezier(.22,.8,.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--label);line-height:1.35;-webkit-font-smoothing:antialiased;
+  min-height:100vh;min-height:100dvh;padding:18px 16px calc(34px + env(safe-area-inset-bottom))}
+.app{max-width:520px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:3px solid rgba(0,122,255,.45);outline-offset:2px;border-radius:10px}
+
+/* Judul besar */
+.title{font-size:34px;font-weight:700;letter-spacing:-.022em;line-height:1.1;margin:6px 4px 18px}
+.title small{display:block;font-size:15px;font-weight:400;letter-spacing:0;color:var(--label2);margin-top:6px}
+
+/* Grup & sel (inset grouped) */
+.hdr{font-size:13px;color:var(--label2);margin:22px 16px 7px}
+.ftr{font-size:13px;color:var(--label2);margin:8px 16px 0}
+.group{background:var(--cell);border-radius:var(--r);overflow:hidden}
+.cell{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 16px;position:relative}
+.cell + .cell::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.cell .grow{flex:1;min-width:0}
+.cell .lbl{font-size:17px}
+.cell .val{font-size:17px;color:var(--label2)}
+.cell input[type=text],.cell input[type=number],.cell input[type=date],.cell select{
+  flex:1;min-width:0;background:none;border:0;outline:0;font-size:17px;text-align:right;color:var(--blue);appearance:none;-webkit-appearance:none;min-height:36px}
+.cell input[type=text],.cell input[type=number]{color:var(--label)}
+.cell input[type=date]{color:var(--blue);font-family:var(--font)}
+.cell select{text-align-last:right;padding-right:2px;cursor:pointer}
+.pad{padding:16px}
+
+/* Tombol */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;border-radius:14px;
+  background:var(--blue);color:#fff;font-size:17px;font-weight:600;transition:transform .2s var(--ease),opacity .2s,background .2s}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn.tint{background:rgba(0,122,255,.12);color:var(--blue)}
+.btn.gray{background:var(--fill);color:var(--label)}
+.btn.red{background:rgba(255,59,48,.12);color:var(--red)}
+.btn.block{display:flex;width:100%}
+.btn-row{display:flex;gap:10px}.btn-row .btn{flex:1}
+.link-btn{color:var(--blue);font-size:17px;padding:8px 4px;min-height:44px}
+
+/* Segmented control dengan thumb yang meluncur */
+.seg{--n:2;--i:0;position:relative;display:grid;grid-template-columns:repeat(var(--n),1fr);padding:2px;border-radius:9px;background:var(--fill);isolation:isolate}
+.seg::before{content:"";position:absolute;z-index:-1;top:2px;bottom:2px;left:2px;width:calc((100% - 4px)/var(--n));border-radius:7px;background:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);transform:translateX(calc(var(--i)*100%));transition:transform .35s var(--spring)}
+.seg button{min-height:32px;font-size:13px;font-weight:500;border-radius:7px;white-space:nowrap}
+.seg button[aria-pressed="true"]{font-weight:600}
+
+/* Switch */
+.switch{position:relative;width:51px;height:31px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2}
+.switch i{position:absolute;inset:0;border-radius:31px;background:rgba(120,120,128,.32);transition:background .3s}
+.switch i::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16);transition:transform .35s var(--spring)}
+.switch input:checked + i{background:var(--green)}
+.switch input:checked + i::after{transform:translateX(20px)}
+.switch input:focus-visible + i{outline:3px solid rgba(0,122,255,.45);outline-offset:2px}
+
+/* Slider */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;cursor:pointer;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(to right,var(--blue) var(--p),var(--fill2) var(--p))}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:var(--fill2)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:4px;background:var(--blue)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-12px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18)}
+
+/* Kartu statistik */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--cell);border-radius:var(--r);padding:14px 16px}
+.tile small{display:block;font-size:13px;color:var(--label2)}
+.tile b{display:block;font-size:30px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15;margin-top:2px}
+.tile.wide{grid-column:1/-1}
+
+.num{font-variant-numeric:tabular-nums}
+.chevron{width:8px;height:14px;flex:none;color:var(--label3)}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translate(-50%,24px) scale(.96);opacity:0;pointer-events:none;
+  background:rgba(40,40,44,.88);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  color:#fff;font-size:15px;font-weight:500;padding:12px 20px;border-radius:999px;transition:transform .45s var(--spring),opacity .25s;z-index:50;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation:none!important}}
