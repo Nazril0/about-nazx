@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Catatan</title>
+<link rel="stylesheet" href="ios.css">
+<style>
+  :root{--note:#E6A700}
+  .bar{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin-bottom:4px}
+  .bar .link-btn{color:var(--note)}
+  .search{display:flex;align-items:center;gap:8px;background:var(--fill);border-radius:12px;padding:0 10px;min-height:38px;margin-bottom:6px}
+  .search svg{color:var(--label2);flex:none}
+  .search input{flex:1;background:none;border:0;outline:0;font-size:17px;min-height:38px}
+  .row{width:100%;text-align:left;display:block;padding:11px 16px}
+  .row b{display:block;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row span{display:flex;gap:8px;font-size:15px;color:var(--label2);white-space:nowrap;overflow:hidden}
+  .row span em{font-style:normal;color:var(--label);opacity:.6;flex:none}
+  .row span i{font-style:normal;overflow:hidden;text-overflow:ellipsis}
+  .row:active{background:var(--fill)}
+  .empty{text-align:center;color:var(--label2);padding:70px 20px}
+  .empty div{font-size:46px;margin-bottom:8px}
+  .count{text-align:center;color:var(--label2);font-size:13px;margin-top:16px}
+  #editor{display:none}
+  .editing #list{display:none}.editing #editor{display:block}
+  .meta{text-align:center;font-size:13px;color:var(--label2);margin:8px 0 10px}
+  #ta{width:100%;min-height:62dvh;border:0;outline:0;resize:none;background:transparent;font-size:19px;line-height:1.45;caret-color:var(--note)}
+  #ta::placeholder{color:var(--label3)}
+</style>
+</head>
+<body>
+<div class="app" id="root">
+  <!-- Daftar -->
+  <section id="list">
+    <div class="bar"><span></span><button class="link-btn" type="button" id="newTop">Baru</button></div>
+    <h1 class="title">Catatan</h1>
+    <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="q" placeholder="Cari" aria-label="Cari catatan"></label>
+    <div id="items"></div>
+    <p class="count" id="count"></p>
+  </section>
+
+  <!-- Editor -->
+  <section id="editor">
+    <div class="bar">
+      <button class="link-btn" type="button" id="back" style="display:flex;align-items:center;gap:4px"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>Catatan</button>
+      <button class="link-btn" type="button" id="del" style="color:var(--red)">Hapus</button>
+    </div>
+    <p class="meta" id="meta"></p>
+    <textarea id="ta" placeholder="Tulis sesuatu…" aria-label="Isi catatan"></textarea>
+  </section>
+</div>
+<script src="ios.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const KEY = 'nazx.notes.v1';
+  let notes = iOS.store.get(KEY, null);
+  if (!notes) notes = [{ id: 'w', t: Date.now(), body: 'Selamat datang 👋\nKetuk "Baru" untuk membuat catatan. Semua tersimpan di perangkatmu.' }];
+  let cur = null;
+  const save = () => iOS.store.set(KEY, notes);
+  const fmt = (t) => {
+    const d = new Date(t), n = new Date();
+    if (d.toDateString() === n.toDateString()) return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: d.getFullYear() === n.getFullYear() ? undefined : 'numeric' });
+  };
+  const split = (b) => { const l = b.split('\n'); const title = (l[0] || '').trim() || 'Catatan baru'; const prev = l.slice(1).join(' ').trim() || 'Tidak ada teks tambahan'; return [title, prev]; };
+
+  const render = () => {
+    const q = $('q').value.trim().toLowerCase();
+    const list = notes.filter((n) => n.body.toLowerCase().includes(q)).sort((a, b) => b.t - a.t);
+    const box = $('items'); box.innerHTML = '';
+    if (!list.length) {
+      box.innerHTML = '<div class="empty"><div>📝</div>' + (q ? 'Tidak ada hasil untuk pencarian ini.' : 'Belum ada catatan.<br>Ketuk "Baru" untuk mulai.') + '</div>';
+    } else {
+      const g = document.createElement('div'); g.className = 'group';
+      list.forEach((n) => {
+        const [t, p] = split(n.body);
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'cell row';
+        const bt = document.createElement('b'); bt.textContent = t;
+        const sp = document.createElement('span'); const em = document.createElement('em'); em.textContent = fmt(n.t); const i = document.createElement('i'); i.textContent = p;
+        sp.append(em, i); b.append(bt, sp); b.onclick = () => open(n.id); g.appendChild(b);
+      });
+      box.appendChild(g);
+    }
+    $('count').textContent = notes.length ? `${notes.length} catatan` : '';
+  };
+  const open = (id) => {
+    cur = notes.find((n) => n.id === id); if (!cur) return;
+    $('ta').value = cur.body; $('meta').textContent = new Date(cur.t).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+    $('root').classList.add('editing'); scrollTo(0, 0);
+    if (!cur.body) $('ta').focus();
+  };
+  const close = () => {
+    if (cur && !cur.body.trim()) notes = notes.filter((n) => n !== cur);
+    cur = null; save(); $('root').classList.remove('editing'); render();
+  };
+  const create = () => { const n = { id: 'n' + Date.now(), t: Date.now(), body: '' }; notes.push(n); open(n.id); iOS.buzz(); };
+
+  $('ta').addEventListener('input', () => { if (!cur) return; cur.body = $('ta').value; cur.t = Date.now(); $('meta').textContent = new Date(cur.t).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }); save(); });
+  $('back').onclick = close;
+  $('del').onclick = () => { if (!cur) return; if (!$('del').dataset.sure) { $('del').dataset.sure = '1'; $('del').textContent = 'Yakin hapus?'; setTimeout(() => { delete $('del').dataset.sure; $('del').textContent = 'Hapus'; }, 2500); return; }
+    notes = notes.filter((n) => n !== cur); cur = null; delete $('del').dataset.sure; $('del').textContent = 'Hapus'; save(); $('root').classList.remove('editing'); render(); iOS.toast('Catatan dihapus'); };
+  $('newTop').onclick = create;
+  $('q').addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>
