@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stopwatch & Timer</title>
+<link rel="stylesheet" href="ios.css">
+<style>
+  body{background:#000;color:#fff}
+  :root{--cellx:#1C1C1E;--sepx:rgba(84,84,88,.5)}
+  .app{display:flex;flex-direction:column;min-height:calc(100dvh - 52px)}
+  .seg{background:#1C1C1E}
+  .seg::before{background:#636366;box-shadow:none}
+  .seg button{color:#fff}
+  .title{margin-top:18px}
+  /* Stopwatch */
+  .clock{text-align:center;font-size:76px;font-weight:200;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin:34px 0 26px;line-height:1}
+  .clock small{font-size:44px;opacity:.7}
+  .circles{display:flex;justify-content:space-between;padding:0 6px}
+  .c{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;position:relative;font-size:17px;font-weight:500;transition:transform .15s,opacity .2s}
+  .c::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid #000;pointer-events:none}
+  .c:active{opacity:.7}
+  .c.gray{background:#333336;color:#fff}.c.gray:disabled{color:#8E8E93;opacity:.6}
+  .c.go{background:rgba(48,209,88,.28);color:#30D158}
+  .c.stop{background:rgba(255,69,58,.28);color:#FF453A}
+  .c.cool{background:rgba(255,159,10,.25);color:#FF9F0A}
+  .laps{margin-top:22px;border-top:1px solid var(--sepx)}
+  .lap{display:flex;justify-content:space-between;padding:12px 4px;border-bottom:1px solid var(--sepx);font-size:17px;font-variant-numeric:tabular-nums}
+  .lap.best{color:#30D158}.lap.worst{color:#FF453A}
+  /* Timer */
+  .hide{display:none!important}
+  .wheels{position:relative;display:flex;justify-content:center;gap:0;margin:26px 0 24px;height:200px}
+  .wheels::before{content:"";position:absolute;left:0;right:0;top:82px;height:36px;border-radius:10px;background:#2C2C2E;z-index:0}
+  .wheel{position:relative;z-index:1;width:33%;display:flex;align-items:center;justify-content:center}
+  .w-scroll{height:200px;width:100%;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;padding:82px 0;
+    -webkit-mask-image:linear-gradient(#0000,#000 32%,#000 68%,#0000);mask-image:linear-gradient(#0000,#000 32%,#000 68%,#0000)}
+  .w-scroll::-webkit-scrollbar{display:none}
+  .w-scroll div{height:36px;scroll-snap-align:center;display:flex;align-items:center;justify-content:flex-end;padding-right:44%;font-size:23px;font-variant-numeric:tabular-nums}
+  .wheel em{position:absolute;right:6%;top:50%;transform:translateY(-50%);font-style:normal;font-size:15px;font-weight:600;pointer-events:none}
+  .ring{position:relative;width:min(300px,80vw);aspect-ratio:1;margin:24px auto 30px}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring circle{fill:none;stroke-width:6}
+  .ring .bg{stroke:#2C2C2E}
+  .ring .fg{stroke:#FF9F0A;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+  .ring .t{position:absolute;inset:0;display:grid;place-items:center;font-size:58px;font-weight:200;font-variant-numeric:tabular-nums}
+  .ring .t small{display:block;font-size:15px;font-weight:400;color:#8E8E93;text-align:center;margin-top:-4px}
+  .presets{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+  .presets button{background:#1C1C1E;color:#FF9F0A;border-radius:999px;padding:0 16px;min-height:38px;font-size:15px;font-weight:500}
+  .presets button:active{background:#2C2C2E}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="seg" id="mode"><button type="button">Stopwatch</button><button type="button">Timer</button></div>
+
+  <!-- STOPWATCH -->
+  <section id="p-sw">
+    <div class="clock" id="swClock" aria-live="off">00:00<small>,00</small></div>
+    <div class="circles">
+      <button class="c gray" type="button" id="swLap" disabled>Lap</button>
+      <button class="c go" type="button" id="swGo">Mulai</button>
+    </div>
+    <div class="laps" id="laps"></div>
+  </section>
+
+  <!-- TIMER -->
+  <section id="p-tm" class="hide">
+    <div id="tmSet">
+      <div class="wheels" aria-label="Pilih durasi">
+        <div class="wheel"><div class="w-scroll" id="wH" aria-label="Jam"></div><em>jam</em></div>
+        <div class="wheel"><div class="w-scroll" id="wM" aria-label="Menit"></div><em>mnt</em></div>
+        <div class="wheel"><div class="w-scroll" id="wS" aria-label="Detik"></div><em>dtk</em></div>
+      </div>
+      <div class="circles">
+        <button class="c gray" type="button" id="tmReset">Reset</button>
+        <button class="c go" type="button" id="tmStart">Mulai</button>
+      </div>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div id="tmRun" class="hide">
+      <div class="ring">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="46"/><circle class="fg" id="fg" cx="50" cy="50" r="46" stroke-dasharray="289.03" stroke-dashoffset="0"/></svg>
+        <div class="t"><div><span id="tmClock">00:00</span><small id="tmEnd"></small></div></div>
+      </div>
+      <div class="circles">
+        <button class="c gray" type="button" id="tmCancel">Batal</button>
+        <button class="c cool" type="button" id="tmPause">Jeda</button>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="ios.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const p2 = (n) => String(n).padStart(2, '0');
+  let wvals = [0, 5, 0];      // posisi wheel disimpan, karena scroll hilang saat panel disembunyikan
+  const readW = () => [$('wH'), $('wM'), $('wS')].map((el) => Math.round(el.scrollTop / 36));
+  const applyW = () => [$('wH'), $('wM'), $('wS')].forEach((el, k) => { el.scrollTop = wvals[k] * 36; });
+  iOS.seg($('mode'), (i) => {
+    if (i === 0 && !$('p-tm').classList.contains('hide') && !$('tmSet').classList.contains('hide')) wvals = readW();
+    $('p-sw').classList.toggle('hide', i !== 0); $('p-tm').classList.toggle('hide', i !== 1);
+    if (i === 1) applyW();
+  });
+
+  /* ---------- Stopwatch ---------- */
+  let swRun = false, swBase = 0, swStart = 0, raf = 0, lapBase = 0, laps = [];
+  const swNow = () => swBase + (swRun ? performance.now() - swStart : 0);
+  const fmt = (ms) => { const c = Math.floor(ms / 10) % 100, s = Math.floor(ms / 1000) % 60, m = Math.floor(ms / 60000); return [`${p2(m)}:${p2(s)}`, p2(c)]; };
+  const paint = () => { const [a, b] = fmt(swNow()); $('swClock').innerHTML = `${a}<small>,${b}</small>`; if (swRun) raf = requestAnimationFrame(paint); };
+  const lapRow = () => {
+    const box = $('laps'); box.innerHTML = '';
+    const times = laps.map((l) => l.d);
+    const best = Math.min(...times), worst = Math.max(...times);
+    [...laps].reverse().forEach((l) => {
+      const r = document.createElement('div'); r.className = 'lap' + (laps.length > 2 ? (l.d === best ? ' best' : l.d === worst ? ' worst' : '') : '');
+      const a = document.createElement('span'); a.textContent = 'Lap ' + l.n;
+      const [x, y] = fmt(l.d); const b = document.createElement('span'); b.textContent = `${x},${y}`;
+      r.append(a, b); box.appendChild(r);
+    });
+  };
+  $('swGo').onclick = () => {
+    iOS.buzz(10);
+    if (!swRun) { swRun = true; swStart = performance.now(); $('swGo').textContent = 'Henti'; $('swGo').className = 'c stop'; $('swLap').disabled = false; $('swLap').textContent = 'Lap'; paint(); }
+    else { swBase = swNow(); swRun = false; cancelAnimationFrame(raf); paint(); $('swGo').textContent = 'Lanjut'; $('swGo').className = 'c go'; $('swLap').textContent = 'Reset'; }
+  };
+  $('swLap').onclick = () => {
+    iOS.buzz(6);
+    if (swRun) { const t = swNow(); laps.push({ n: laps.length + 1, d: t - lapBase }); lapBase = t; lapRow(); }
+    else { swBase = 0; lapBase = 0; laps = []; $('laps').innerHTML = ''; paint(); $('swLap').textContent = 'Lap'; $('swLap').disabled = true; $('swGo').textContent = 'Mulai'; }
+  };
+
+  /* ---------- Timer ---------- */
+  const mk = (el, max, val) => {
+    for (let i = 0; i <= max; i++) { const d = document.createElement('div'); d.textContent = i; el.appendChild(d); }
+    el.scrollTop = val * 36;
+  };
+  mk($('wH'), 23, 0); mk($('wM'), 59, 0); mk($('wS'), 59, 0);
+  const wv = (el) => Math.round(el.scrollTop / 36);
+  const dur = () => (wv($('wH')) * 3600 + wv($('wM')) * 60 + wv($('wS'))) * 1000;
+  const setWheels = (ms) => { const s = Math.round(ms / 1000); $('wH').scrollTo({ top: Math.floor(s / 3600) * 36, behavior: 'smooth' }); $('wM').scrollTo({ top: Math.floor(s % 3600 / 60) * 36, behavior: 'smooth' }); $('wS').scrollTo({ top: (s % 60) * 36, behavior: 'smooth' }); };
+  [['1 mnt', 60], ['3 mnt', 180], ['5 mnt', 300], ['10 mnt', 600], ['25 mnt', 1500]].forEach(([l, s]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = l; b.onclick = () => { setWheels(s * 1000); iOS.buzz(); }; $('presets').appendChild(b);
+  });
+  $('tmReset').onclick = () => setWheels(0);
+
+  let total = 0, endAt = 0, left = 0, paused = false, tmId = 0, ctx;
+  const R = 289.03;
+  const tmPaint = () => {
+    const l = paused ? left : Math.max(0, endAt - Date.now());
+    const s = Math.ceil(l / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+    $('tmClock').textContent = h ? `${h}:${p2(m)}:${p2(x)}` : `${p2(m)}:${p2(x)}`;
+    $('fg').style.strokeDashoffset = String(R * (1 - l / total));
+    if (!paused) $('tmEnd').textContent = '🔔 ' + new Date(endAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    if (!paused && l <= 0) { done(); return; }
+  };
+  const beep = () => {
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      [0, .35, .7].forEach((t) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
+        const n = ctx.currentTime + t; g.gain.setValueAtTime(0, n); g.gain.linearRampToValueAtTime(.25, n + .02); g.gain.exponentialRampToValueAtTime(.001, n + .3); o.start(n); o.stop(n + .32);
+      });
+    } catch (_) {}
+  };
+  const done = () => { clearInterval(tmId); beep(); try { navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 400]); } catch (_) {} iOS.toast('Waktu habis ⏰'); stopTm(); };
+  const stopTm = () => { clearInterval(tmId); $('tmRun').classList.add('hide'); $('tmSet').classList.remove('hide'); };
+  $('tmStart').onclick = () => {
+    total = dur(); if (total < 1000) { iOS.toast('Pilih durasi dulu'); return; }
+    try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); ctx.resume && ctx.resume(); } catch (_) {}
+    endAt = Date.now() + total; paused = false; $('tmPause').textContent = 'Jeda'; $('tmPause').className = 'c cool';
+    $('tmSet').classList.add('hide'); $('tmRun').classList.remove('hide'); tmPaint(); tmId = setInterval(tmPaint, 200); iOS.buzz(10);
+  };
+  $('tmPause').onclick = () => {
+    iOS.buzz(8);
+    if (!paused) { left = Math.max(0, endAt - Date.now()); paused = true; $('tmPause').textContent = 'Lanjut'; $('tmPause').className = 'c go'; $('tmEnd').textContent = 'Dijeda'; }
+    else { endAt = Date.now() + left; paused = false; $('tmPause').textContent = 'Jeda'; $('tmPause').className = 'c cool'; }
+    tmPaint();
+  };
+  $('tmCancel').onclick = stopTm;
+  paint();
+})();
+</script>
+</body>
+</html>
