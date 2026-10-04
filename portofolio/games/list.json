@@ -1,0 +1,52 @@
+[
+  {
+    "file": "game1.html",
+    "title": "Game 1",
+    "emoji": "🚀"
+  },
+  {
+    "file": "game2.html",
+    "title": "Game 2",
+    "emoji": "🧩"
+  },
+  {
+    "file": "game3.html",
+    "title": "Game 3",
+    "emoji": "🏎️"
+  },
+  {
+    "file": "game4.html",
+    "title": "Game 4",
+    "emoji": "👾"
+  },
+  {
+    "file": "game5.html",
+    "title": "Game 5",
+    "emoji": "⚽"
+  },
+  {
+    "file": "game6.html",
+    "title": "Game 6",
+    "emoji": "🎯"
+  },
+  {
+    "file": "game7.html",
+    "title": "Game 7",
+    "emoji": "🐉"
+  },
+  {
+    "file": "game8.html",
+    "title": "Game 8",
+    "emoji": "🍄"
+  },
+  {
+    "file": "game9.html",
+    "title": "Game 9",
+    "emoji": "🎲"
+  },
+  {
+    "file": "game10.html",
+    "title": "Game 10",
+    "emoji": "🕹️"
+  }
+]
