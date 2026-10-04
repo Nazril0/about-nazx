@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator</title>
+<link rel="stylesheet" href="ios.css">
+<style>
+  body{background:#000;color:#fff;padding:0;display:flex;align-items:flex-end;justify-content:center}
+  .calc{width:100%;max-width:420px;min-height:100dvh;display:flex;flex-direction:column;justify-content:flex-end;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+  .screen{padding:0 10px 14px;text-align:right;min-height:96px;display:flex;align-items:flex-end;justify-content:flex-end}
+  #out{font-size:88px;font-weight:300;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;transition:font-size .15s}
+  .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .k{aspect-ratio:1;border-radius:50%;font-size:min(34px,8.4vw);font-weight:400;background:#333;color:#fff;display:grid;place-items:center;
+    transition:background .45s ease,transform .12s;user-select:none}
+  .k:active{background:#737373;transition:none}
+  .k.fn{background:#A5A5A5;color:#000}.k.fn:active{background:#D9D9D9}
+  .k.op{background:#FF9F0A;color:#fff;font-size:min(42px,10vw)}.k.op:active{background:#FFC26F}
+  .k.op.on{background:#fff;color:#FF9F0A}
+  .k.zero{grid-column:span 2;aspect-ratio:auto;border-radius:999px;justify-content:start;padding-left:9%;height:100%}
+  .keys .k.zero{aspect-ratio:auto}
+  .grid-zero{display:contents}
+  @media(max-height:640px){#out{font-size:64px}.keys{gap:9px}}
+</style>
+</head>
+<body>
+<main class="calc">
+  <div class="screen"><div id="out" aria-live="polite" aria-label="Hasil">0</div></div>
+  <div class="keys" id="keys">
+    <button class="k fn" data-a="clear" id="clr" aria-label="Hapus">AC</button>
+    <button class="k fn" data-a="neg" aria-label="Plus minus">±</button>
+    <button class="k fn" data-a="pct" aria-label="Persen">%</button>
+    <button class="k op" data-o="/" aria-label="Bagi">÷</button>
+    <button class="k" data-d="7">7</button><button class="k" data-d="8">8</button><button class="k" data-d="9">9</button>
+    <button class="k op" data-o="*" aria-label="Kali">×</button>
+    <button class="k" data-d="4">4</button><button class="k" data-d="5">5</button><button class="k" data-d="6">6</button>
+    <button class="k op" data-o="-" aria-label="Kurang">−</button>
+    <button class="k" data-d="1">1</button><button class="k" data-d="2">2</button><button class="k" data-d="3">3</button>
+    <button class="k op" data-o="+" aria-label="Tambah">+</button>
+    <button class="k zero" data-d="0">0</button>
+    <button class="k" data-a="dot" aria-label="Koma">,</button>
+    <button class="k op" data-a="eq" aria-label="Sama dengan">=</button>
+  </div>
+</main>
+<script>
+(() => {
+  const out = document.getElementById('out'), clr = document.getElementById('clr');
+  let cur = '0', prev = null, op = null, fresh = false, lastOp = null, lastVal = null, err = false;
+
+  const calc = (a, o, b) => {
+    switch (o) {
+      case '+': return a + b; case '-': return a - b; case '*': return a * b;
+      case '/': return b === 0 ? NaN : a / b;
+    }
+  };
+  const str = (n) => {
+    if (!isFinite(n)) return null;
+    let s = String(parseFloat(n.toPrecision(12)));
+    if (s.includes('e') || s.replace(/[-.]/g, '').length > 12) s = n.toExponential(5).replace(/\.?0+e/, 'e');
+    return s;
+  };
+  const pretty = (s) => {
+    if (err) return 'Error';
+    if (s.includes('e')) return s.replace('.', ',');
+    const neg = s.startsWith('-'); if (neg) s = s.slice(1);
+    let [i, f] = s.split('.');
+    i = i.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (neg ? '-' : '') + i + (f !== undefined ? ',' + f : '');
+  };
+  const render = () => {
+    const t = pretty(cur);
+    out.textContent = t;
+    const len = t.length;
+    const base = innerHeight < 640 ? 64 : 88;
+    out.style.fontSize = Math.max(38, Math.min(base, (Math.min(innerWidth, 420) - 52) / (len * 0.55))) + 'px';
+    clr.textContent = (cur !== '0' && !err) ? 'C' : 'AC';
+    document.querySelectorAll('.op[data-o]').forEach((b) => b.classList.toggle('on', fresh && op === b.dataset.o));
+  };
+  const reset = () => { cur = '0'; prev = null; op = null; fresh = false; lastOp = lastVal = null; err = false; };
+
+  const digit = (d) => {
+    if (err) reset();
+    if (fresh || cur === '0') { cur = d; fresh = false; }
+    else if (cur.replace(/[-.]/g, '').length < 12) cur += d;
+    render();
+  };
+  const dot = () => {
+    if (err) reset();
+    if (fresh) { cur = '0.'; fresh = false; }
+    else if (!cur.includes('.')) cur += '.';
+    render();
+  };
+  const setOp = (o) => {
+    if (err) return;
+    if (op && prev !== null && !fresh) {
+      const r = calc(prev, op, parseFloat(cur));
+      const s = str(r); if (s === null) { err = true; cur = '0'; render(); return; }
+      cur = s;
+    }
+    prev = parseFloat(cur); op = o; fresh = true; lastOp = null; render();
+  };
+  const equals = () => {
+    if (err) return;
+    let r;
+    if (op) { const b = parseFloat(cur); r = calc(prev, op, b); lastOp = op; lastVal = b; }
+    else if (lastOp) r = calc(parseFloat(cur), lastOp, lastVal);
+    else return;
+    const s = str(r);
+    if (s === null) { err = true; cur = '0'; } else cur = s;
+    prev = null; op = null; fresh = true; render();
+  };
+  const clear = () => {
+    if (cur !== '0' && !err) { cur = '0'; fresh = false; render(); }
+    else { reset(); render(); }
+  };
+  const neg = () => { if (err) return; cur = cur.startsWith('-') ? cur.slice(1) : (cur === '0' ? '-0' : '-' + cur); if (cur === '-0' && !fresh) {} render(); };
+  const pct = () => {
+    if (err) return;
+    let v = parseFloat(cur);
+    v = (op && prev !== null) ? prev * v / 100 : v / 100;
+    cur = str(v) ?? '0'; fresh = true; render();
+  };
+
+  document.getElementById('keys').addEventListener('click', (e) => {
+    const b = e.target.closest('.k'); if (!b) return;
+    iOS.buzz(6);
+    if (b.dataset.d) digit(b.dataset.d);
+    else if (b.dataset.o) setOp(b.dataset.o);
+    else ({ clear, neg, pct, dot, eq: equals })[b.dataset.a]();
+  });
+  addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey) return;
+    if (/^[0-9]$/.test(e.key)) digit(e.key);
+    else if (e.key === '.' || e.key === ',') dot();
+    else if ('+-*/'.includes(e.key)) setOp(e.key);
+    else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); equals(); }
+    else if (e.key === 'Backspace') { if (!fresh && cur.length > 1) { cur = cur.slice(0, -1); if (cur === '-') cur = '0'; render(); } else clear(); }
+    else if (e.key === 'Escape') { reset(); render(); }
+    else if (e.key === '%') pct();
+  });
+  addEventListener('resize', render);
+  render();
+})();
+</script>
+<script src="ios.js"></script>
+</body>
+</html>
