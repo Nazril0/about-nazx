@@ -1,0 +1,29 @@
+[
+  {
+    "id": "profil",
+    "title": "Profil",
+    "emoji": "👤",
+    "type": "profile"
+  },
+  {
+    "id": "game",
+    "title": "Game",
+    "emoji": "🎮",
+    "type": "collection",
+    "dir": "games"
+  },
+  {
+    "id": "gallery",
+    "title": "Gallery",
+    "emoji": "🖼️",
+    "type": "gallery",
+    "dir": "gallery"
+  },
+  {
+    "id": "tools",
+    "title": "Tools",
+    "emoji": "🧰",
+    "type": "collection",
+    "dir": "tools"
+  }
+]
