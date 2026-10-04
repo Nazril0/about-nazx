@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Penghitung Kata</title>
+<link rel="stylesheet" href="ios.css">
+<style>
+  .editor{background:var(--cell);border-radius:20px;padding:14px 16px 10px}
+  #t{width:100%;min-height:170px;border:0;outline:0;resize:vertical;background:none;font-size:17px;line-height:1.5}
+  #t::placeholder{color:var(--label3)}
+  .tools{display:flex;justify-content:space-between;align-items:center;border-top:.5px solid var(--sep);margin:6px -16px 0;padding:2px 16px 0}
+  .tools span{font-size:13px;color:var(--label2)}
+  .rank{display:flex;align-items:center;gap:12px;padding:10px 16px;position:relative}
+  .rank + .rank::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+  .rank .w{width:92px;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rank .bar{flex:1;height:8px;border-radius:8px;background:var(--fill)}
+  .rank .bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#5AC8FA,#007AFF);width:0;transition:width .5s var(--ease)}
+  .rank .n{width:30px;text-align:right;color:var(--label2);font-size:15px;font-variant-numeric:tabular-nums}
+  .none{padding:18px 16px;color:var(--label2);font-size:15px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="title">Penghitung Kata</h1>
+
+  <div class="editor">
+    <textarea id="t" placeholder="Tulis atau tempel teks di sini…" aria-label="Teks"></textarea>
+    <div class="tools">
+      <button class="link-btn" type="button" id="paste">Tempel</button>
+      <span id="mini">0 kata</span>
+      <button class="link-btn" type="button" id="clear" style="color:var(--red)">Hapus</button>
+    </div>
+  </div>
+
+  <div class="hdr">Statistik</div>
+  <div class="tiles">
+    <div class="tile"><small>Kata</small><b id="sW" style="color:var(--blue)">0</b></div>
+    <div class="tile"><small>Karakter</small><b id="sC">0</b></div>
+    <div class="tile"><small>Tanpa spasi</small><b id="sN">0</b></div>
+    <div class="tile"><small>Kalimat</small><b id="sS">0</b></div>
+    <div class="tile"><small>Paragraf</small><b id="sP">0</b></div>
+    <div class="tile"><small>Waktu baca</small><b id="sR">0 dtk</b></div>
+  </div>
+
+  <div class="hdr">Kata paling sering</div>
+  <div class="group" id="top"></div>
+  <p class="ftr">Kata kurang dari 3 huruf tidak ikut dihitung. Waktu baca memakai 200 kata per menit.</p>
+</div>
+<script src="ios.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const nf = new Intl.NumberFormat('id-ID');
+  const update = () => {
+    const s = $('t').value, words = s.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu) || [];
+    const sent = (s.match(/[^.!?…\n]+[.!?…]*/g) || []).filter((x) => /[\p{L}\p{N}]/u.test(x)).length;
+    const para = s.split(/\n\s*\n/).filter((x) => x.trim()).length;
+    const secs = Math.round(words.length / 200 * 60);
+    $('sW').textContent = nf.format(words.length);
+    $('sC').textContent = nf.format([...s].length);
+    $('sN').textContent = nf.format([...s.replace(/\s/g, '')].length);
+    $('sS').textContent = nf.format(sent);
+    $('sP').textContent = nf.format(para);
+    $('sR').textContent = secs < 60 ? `${secs} dtk` : `${Math.round(secs / 60)} mnt`;
+    $('mini').textContent = `${nf.format(words.length)} kata`;
+    const freq = new Map();
+    words.map((w) => w.toLowerCase()).filter((w) => [...w].length >= 3).forEach((w) => freq.set(w, (freq.get(w) || 0) + 1));
+    const top = [...freq].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5);
+    const box = $('top'); box.innerHTML = '';
+    if (!top.length) { box.innerHTML = '<div class="none">Mulai menulis untuk melihat kata yang sering muncul.</div>'; return; }
+    const max = top[0][1];
+    top.forEach(([w, n]) => {
+      const r = document.createElement('div'); r.className = 'rank';
+      const a = document.createElement('span'); a.className = 'w'; a.textContent = w;
+      const b = document.createElement('span'); b.className = 'bar'; const i = document.createElement('i'); b.appendChild(i);
+      const c = document.createElement('span'); c.className = 'n'; c.textContent = n;
+      r.append(a, b, c); box.appendChild(r);
+      requestAnimationFrame(() => { i.style.width = (n / max * 100) + '%'; });
+    });
+  };
+  $('t').addEventListener('input', () => { iOS.store.set('nazx.wc', $('t').value); update(); });
+  $('clear').onclick = () => { $('t').value = ''; iOS.store.set('nazx.wc', ''); update(); $('t').focus(); iOS.buzz(); };
+  $('paste').onclick = async () => {
+    try { const x = await navigator.clipboard.readText(); $('t').value += x; iOS.store.set('nazx.wc', $('t').value); update(); }
+    catch (_) { iOS.toast('Izin tempel ditolak. Tempel manual ya'); $('t').focus(); }
+  };
+  $('t').value = iOS.store.get('nazx.wc', '');
+  update();
+})();
+</script>
+</body>
+</html>
