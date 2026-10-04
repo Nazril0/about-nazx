@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E4E7FF">
+<title>Live Photo Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #E4E7FF;
+    --paper-deep: #CDD2F7;
+    --ink: #14173A;
+    --mute: #5A5F8F;
+    --blue: #3A46FF;
+    --sun: #FFD23F;
+    --white: #FFFFFF;
+    --ok: #0B7A4B;
+    --err: #C21F3A;
+    --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh;
+    padding: 28px 16px calc(48px + env(safe-area-inset-bottom));
+    background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 15px; line-height: 1.5;
+    display: flex; flex-direction: column; align-items: center;
+    overflow-x: hidden;
+  }
+  /* satu bentuk besar di belakang, sebagai penanda "live" */
+  body::before {
+    content: ""; position: fixed; z-index: -1;
+    width: 520px; height: 520px; right: -260px; top: -200px; border-radius: 50%;
+    background: radial-gradient(circle, var(--sun) 0 28%, transparent 28.5% 40%, rgba(255,210,63,.55) 40.5% 41.5%, transparent 42% 54%, rgba(255,210,63,.35) 54.5% 55.5%, transparent 56%);
+  }
+  .wrap { width: 100%; max-width: 460px; }
+
+  /* ── Kepala ── */
+  header { margin: 6px 2px 26px; }
+  h1 {
+    font-family: var(--display); font-weight: 800;
+    font-size: clamp(38px, 11vw, 50px); line-height: .98; letter-spacing: -.035em;
+    margin: 0 0 14px;
+  }
+  p.sub { margin: 0; color: var(--mute); max-width: 36ch; }
+
+  /* ── Pilih video ── */
+  .pick {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; cursor: pointer;
+    background: var(--white); border: 2px solid var(--ink); border-radius: 22px;
+    transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .pick:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .pick .ico {
+    flex: none; width: 52px; height: 52px; border-radius: 16px;
+    background: var(--blue); display: grid; place-items: center;
+  }
+  .pick .ico svg { width: 26px; height: 26px; }
+  .pick .txt { min-width: 0; }
+  .pick strong {
+    display: block; font-family: var(--display); font-size: 18px; font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pick small { color: var(--mute); font-size: 13px; }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  input[type=file]:focus-visible + .pick, .pick:focus-within { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+  #status {
+    font-size: 14px; color: var(--mute); margin: 14px 4px 0;
+    min-height: 20px; white-space: pre-line;
+  }
+  #status.err { color: var(--err); font-weight: 600; }
+  #status.ok  { color: var(--ok); font-weight: 600; }
+
+  /* ── Hasil ── */
+  #resultCard { margin-top: 26px; }
+
+  /* preview jadi foto instan */
+  .polaroid {
+    margin: 0 0 6px; padding: 12px 12px 0; background: var(--white);
+    border: 2px solid var(--ink); border-radius: 8px 8px 22px 22px;
+    box-shadow: 6px 6px 0 var(--ink);
+    transform: rotate(-1.2deg);
+    position: relative;
+  }
+  .polaroid canvas#preview {
+    width: 100%; height: auto; display: block; background: var(--ink);
+    border-radius: 3px; max-height: 60vh; object-fit: contain;
+  }
+  .polaroid figcaption {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 4px 14px; font-family: var(--display); font-weight: 700; font-size: 17px;
+  }
+  .polaroid figcaption span:last-child { color: var(--mute); font-family: var(--body); font-weight: 500; font-size: 14px; }
+  .live-badge {
+    position: absolute; top: 22px; left: 22px; z-index: 1;
+    display: flex; align-items: center; gap: 7px;
+    background: var(--sun); color: var(--ink);
+    border: 2px solid var(--ink); border-radius: 999px; padding: 3px 11px 3px 8px;
+    font-family: var(--display); font-weight: 800; font-size: 13px; letter-spacing: .02em;
+  }
+  .live-badge svg { width: 16px; height: 16px; }
+
+  /* preview gerak: tahan fotonya */
+  .stage {
+    position: relative; cursor: pointer; border-radius: 3px; overflow: hidden;
+    touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  .stage:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+  .stage video#pv {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; background: var(--ink); opacity: 0; pointer-events: none;
+  }
+  .polaroid.playing .stage video#pv { opacity: 1; }
+  .live-badge svg { stroke: currentColor; }
+  .live-badge svg circle:first-child { fill: currentColor; }
+  .polaroid.playing .live-badge { background: var(--blue); color: var(--white); }
+  .hint { margin: 14px 6px 0; }
+
+  /* panel pengaturan: satu lembar, bukan tumpukan kartu */
+  .panel {
+    margin-top: 30px; background: var(--white);
+    border: 2px solid var(--ink); border-radius: 26px; padding: 6px 18px 20px;
+  }
+  .field { padding: 16px 0; border-bottom: 2px dashed var(--paper-deep); }
+  .field:last-of-type { border-bottom: 0; }
+  .lbl {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: var(--display); font-weight: 700; font-size: 16px; margin: 0 0 10px;
+  }
+  .lbl .val { font-family: var(--body); font-weight: 600; font-size: 14px; color: var(--blue); }
+  .lbl .val span { font-variant-numeric: tabular-nums; }
+  .ends {
+    display: flex; justify-content: space-between; margin-top: 2px;
+    font-size: 13px; color: var(--mute); font-variant-numeric: tabular-nums;
+  }
+  .note { font-size: 13px; color: var(--mute); line-height: 1.5; margin-top: 10px; }
+
+  /* slider frame */
+  input[type=range] { width: 100%; }
+  #frame {
+    -webkit-appearance: none; appearance: none; height: 36px; background: transparent; margin: 0;
+  }
+  #frame::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: var(--paper-deep); }
+  #frame::-moz-range-track { height: 8px; border-radius: 4px; background: var(--paper-deep); }
+  #frame::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: -10px;
+    border-radius: 50%; background: var(--sun); border: 2px solid var(--ink); cursor: grab;
+  }
+  #frame::-moz-range-thumb {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--sun); border: 2px solid var(--ink); cursor: grab;
+  }
+
+  select {
+    width: 100%; padding: 13px 40px 13px 14px; border-radius: 14px;
+    border: 2px solid var(--ink); background: var(--paper);
+    color: var(--ink); font: 500 15px var(--body);
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%2314173A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center;
+  }
+
+  /* slider potong: 1 track, 2 gagang */
+  .dual { position: relative; height: 36px; }
+  .dual .track, .dual .fill {
+    position: absolute; top: 50%; height: 8px; margin-top: -4px; border-radius: 4px;
+  }
+  .dual .track { left: 0; right: 0; background: var(--paper-deep); }
+  .dual .fill  { background: var(--blue); left: 0; width: 100%; }
+  .dual input[type=range] {
+    position: absolute; left: 0; top: 0; width: 100%; height: 36px; margin: 0;
+    background: transparent; pointer-events: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  .dual input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 36px; }
+  .dual input[type=range]::-moz-range-track { background: transparent; height: 36px; }
+  .dual input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; pointer-events: auto;
+    width: 16px; height: 30px; margin-top: 3px; border-radius: 6px;
+    background: var(--white); border: 2px solid var(--ink); cursor: grab;
+  }
+  .dual input[type=range]::-moz-range-thumb {
+    pointer-events: auto; width: 12px; height: 26px; border-radius: 6px;
+    background: var(--white); border: 2px solid var(--ink); cursor: grab;
+  }
+
+  /* ── Tombol ── */
+  button {
+    font: 700 16px var(--display); cursor: pointer; color: var(--ink);
+    width: 100%; padding: 15px 16px; border: 2px solid var(--ink); border-radius: 16px;
+    background: var(--white);
+    transition: transform .12s ease, box-shadow .12s ease;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button:focus-visible, a.btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+  button.primary { background: var(--blue); color: var(--white); }
+  button.sun { background: var(--sun); }
+  #btnBuild { margin-top: 8px; padding: 17px 16px; font-size: 18px; }
+  .row { display: flex; gap: 12px; margin-top: 14px; }
+  #outputs { margin-top: 22px; padding-top: 22px; border-top: 2px dashed var(--paper-deep); }
+  #outputs > .row:first-child { margin-top: 0; }
+  .foot { text-align: center; font-size: 13px; color: var(--mute); margin-top: 22px; }
+  .foot.sub2 { margin-top: 8px; font-size: 13px; }
+  .foot.sub2 a { color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .foot.sub2 a:hover, .foot.sub2 a:focus-visible { color: var(--ink); }
+
+  /* ── Dialog follow TikTok ── */
+  .veil {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    background: rgba(20, 23, 58, .55);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    animation: veilIn .3s ease both;
+  }
+  .veil[hidden] { display: none; }
+  .sheet {
+    position: relative; width: 100%; max-width: 420px; overflow: hidden;
+    background: var(--white); border: 2px solid var(--ink); border-radius: 30px;
+    padding: 26px 22px 22px; box-shadow: 6px 6px 0 var(--ink);
+    animation: sheetIn .5s cubic-bezier(.2, 1.2, .3, 1) .08s both;
+  }
+  .sheet::before {
+    content: ""; position: absolute; width: 220px; height: 220px; right: -90px; top: -100px; border-radius: 50%;
+    background: var(--sun); z-index: 0;
+  }
+  .sheet > * { position: relative; z-index: 1; }
+  .avatar {
+    width: 64px; height: 64px; border-radius: 20px; background: var(--ink);
+    border: 2px solid var(--ink); display: grid; place-items: center;
+    box-shadow: -3px -3px 0 #25F4EE, 3px 3px 0 #FE2C55;
+    transform: rotate(-6deg); margin-bottom: 22px;
+  }
+  .avatar svg { width: 32px; height: 32px; }
+  .sheet h2 {
+    font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1.04;
+    letter-spacing: -.03em; margin: 0 0 10px;
+  }
+  .sheet p { margin: 0; color: var(--mute); }
+  .handle {
+    display: inline-block; margin: 16px 0 20px; padding: 7px 14px;
+    background: var(--paper); border: 2px solid var(--ink); border-radius: 999px;
+    font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--ink);
+  }
+  .sheet .actions { display: grid; gap: 12px; }
+  a.btn {
+    display: block; text-align: center; text-decoration: none;
+    font: 700 17px var(--display); color: var(--white);
+    padding: 16px; border: 2px solid var(--ink); border-radius: 16px;
+    background: var(--blue); box-shadow: 3px 3px 0 var(--ink);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  a.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  .sheet .ghost {
+    box-shadow: none; border-color: transparent; background: transparent;
+    color: var(--mute); padding: 10px; font-weight: 600; font-size: 15px;
+  }
+  .sheet .ghost:active:not(:disabled) { transform: none; box-shadow: none; color: var(--ink); }
+
+  @keyframes veilIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes sheetIn { from { opacity: 0; transform: translateY(60px) scale(.96); } to { opacity: 1; transform: none; } }
+  @media (min-width: 560px) { .veil { align-items: center; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Dialog ajakan follow -->
+<div class="veil" id="follow" role="dialog" aria-modal="true" aria-labelledby="fTitle" aria-describedby="fDesc">
+  <div class="sheet">
+    <div class="avatar" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="#fff"><path d="M19.6 6.7a4.6 4.6 0 0 1-3.6-4.1V2h-3.4v13.4a2.8 2.8 0 1 1-2-2.7V9.2a6.2 6.2 0 1 0 5.4 6.2V9a8 8 0 0 0 4.6 1.5V7.1a4.6 4.6 0 0 1-1-.4z"/></svg>
+    </div>
+    <h2 id="fTitle">Eits, jangan kabur dulu</h2>
+    <p id="fDesc">Tools ini gratis kok. Kasih follow TikTok admin dulu dong, biar admin makin semangat bikin yang baru.</p>
+    <span class="handle">@nazxtampan__</span>
+    <div class="actions">
+      <a class="btn" id="btnTiktok" href="https://www.tiktok.com/@nazxtampan__" target="_blank" rel="noopener">Buka TikTok</a>
+      <button class="ghost" id="btnClose" type="button">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>Video jadi Live Photo.</h1>
+    <p class="sub">Ubah video kamu jadi foto yang bisa gerak. Diproses langsung di browser, nggak ada yang diupload ke mana-mana.</p>
+  </header>
+
+  <input id="file" type="file" accept="video/*">
+  <label class="pick" for="file">
+    <span class="ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="M16 10l5-3v10l-5-3"/></svg>
+    </span>
+    <span class="txt"><strong id="pickText">Pilih video</strong><small>Min. 3 detik, MP4</small></span>
+  </label>
+  <div id="status"></div>
+
+  <div id="resultCard" style="display:none">
+    <figure class="polaroid">
+      <div class="live-badge">
+        <svg viewBox="0 0 16 16" fill="none" stroke="#14173A" stroke-width="1.6"><circle cx="8" cy="8" r="1.8" fill="#14173A"/><circle cx="8" cy="8" r="4.4"/><circle cx="8" cy="8" r="7" stroke-dasharray="1.6 2.2"/></svg>
+        LIVE
+      </div>
+      <div class="stage" id="stage" tabindex="0" role="button" aria-label="Tahan untuk memutar preview">
+        <canvas id="preview"></canvas>
+        <video id="pv" playsinline muted preload="auto"></video>
+      </div>
+      <figcaption><span>Frame foto</span><span><span id="frameVal">0.00</span> dtk</span></figcaption>
+    </figure>
+    <div class="note hint">Tahan foto di atas buat lihat gerakannya. Ini cuma preview dari videonya, bukan file Live Photo aslinya ya.</div>
+
+    <div class="panel">
+      <div class="field">
+        <div class="lbl"><span>Frame untuk foto</span></div>
+        <input id="frame" type="range" min="0" max="1" step="0.05" value="0" aria-label="Frame untuk foto">
+      </div>
+
+      <div class="field">
+        <div class="lbl"><span>Resolusi</span></div>
+        <select id="res" aria-label="Resolusi"></select>
+        <div class="note" id="resNote"></div>
+      </div>
+
+      <div class="field">
+        <div class="lbl"><span>Potong durasi</span><span class="val" id="durVal">0.0 dtk</span></div>
+        <div class="dual">
+          <div class="track"></div>
+          <div class="fill" id="fill"></div>
+          <input id="durA" type="range" min="0" max="1" step="any" value="0" aria-label="Awal video">
+          <input id="durB" type="range" min="0" max="1" step="any" value="1" aria-label="Akhir video">
+        </div>
+        <div class="ends"><span id="durFrom">0.0</span><span id="durTo">0.0</span></div>
+      </div>
+
+      <button class="primary" id="btnBuild">Buat Live Photo</button>
+
+      <div id="outputs" style="display:none">
+        <div class="row">
+          <button class="sun" id="btnSave">Simpan Live Photo</button>
+        </div>
+        <div class="row">
+          <button id="btnShare">Bagikan</button>
+          <button id="btnPhoto">Foto saja</button>
+        </div>
+        <div class="row">
+          <button id="btnVideo">Video saja (.mp4)</button>
+        </div>
+      </div>
+    </div>
+    <div class="foot">Bisa dikirim di TikTok/WA/IG kalo support :)</div>
+    <div class="foot sub2">Ikuti saluran temen atmin😉 <a href="https://whatsapp.com/channel/0029VbCEtF73AzNOtakxec0R" target="_blank" rel="noopener">Vann Chatbot</a> di WhatsApp</div>
+  </div>
+</div>
+
+<script>
+const MIN_SEC = 3;
+
+const $ = (id) => document.getElementById(id);
+const fileEl = $("file"), statusEl = $("status");
+let src = null;     // { file, url, video, dur, vw, vh }
+let result = null;  // { livePhoto: Blob, photo: Blob, name: string }
+
+// ── Dialog follow TikTok ─────────────────────────────────────────────────────
+(function () {
+  const dlg = $("follow");
+  const close = () => { dlg.hidden = true; document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  $("btnClose").addEventListener("click", close);
+  $("btnTiktok").addEventListener("click", () => setTimeout(close, 250));
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) close(); });
+  document.addEventListener("keydown", onKey);
+  $("btnTiktok").focus();
+})();
+
+function setStatus(msg, cls = "") { statusEl.textContent = msg; statusEl.className = cls; }
+const even = (n) => Math.max(2, Math.round(n / 2) * 2);
+
+// ── XMP Motion Photo (Container + legacy MicroVideo) ─────────────────────────
+function buildXmp(videoLen, tsUs = 0) {
+  const xml =
+`<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="lp-app">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:GCamera="http://ns.google.com/photos/1.0/camera/"
+      xmlns:Container="http://ns.google.com/photos/1.0/container/"
+      xmlns:Item="http://ns.google.com/photos/1.0/container/item/"
+      GCamera:MotionPhoto="1"
+      GCamera:MotionPhotoVersion="1"
+      GCamera:MotionPhotoPresentationTimestampUs="${tsUs}"
+      GCamera:MicroVideo="1"
+      GCamera:MicroVideoVersion="1"
+      GCamera:MicroVideoOffset="${videoLen}"
+      GCamera:MicroVideoPresentationTimestampUs="${tsUs}">
+      <Container:Directory>
+        <rdf:Seq>
+          <rdf:li rdf:parseType="Resource">
+            <Container:Item Item:Mime="image/jpeg" Item:Semantic="Primary" Item:Length="0" Item:Padding="0"/>
+          </rdf:li>
+          <rdf:li rdf:parseType="Resource">
+            <Container:Item Item:Mime="video/mp4" Item:Semantic="MotionPhoto" Item:Length="${videoLen}" Item:Padding="0"/>
+          </rdf:li>
+        </rdf:Seq>
+      </Container:Directory>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>`;
+  const enc = new TextEncoder();
+  const header = enc.encode("http://ns.adobe.com/xap/1.0/\0");
+  const body = enc.encode(xml);
+  const len = 2 + header.length + body.length;
+  if (len > 0xffff) throw new Error("XMP terlalu besar");
+  const out = new Uint8Array(4 + header.length + body.length);
+  out[0] = 0xff; out[1] = 0xe1; out[2] = len >> 8; out[3] = len & 0xff;
+  out.set(header, 4);
+  out.set(body, 4 + header.length);
+  return out;
+}
+
+function makeMotionPhoto(jpg, mp4, tsUs = 0) {
+  if (jpg[0] !== 0xff || jpg[1] !== 0xd8) throw new Error("Bukan JPEG valid");
+  let pos = 2;
+  while (jpg[pos] === 0xff && jpg[pos + 1] === 0xe0) {   // lewati APP0/JFIF
+    pos += 2 + ((jpg[pos + 2] << 8) | jpg[pos + 3]);
+  }
+  return new Blob([jpg.subarray(0, pos), buildXmp(mp4.length, tsUs), jpg.subarray(pos), mp4],
+                  { type: "image/jpeg" });
+}
+
+// ── Video helpers ────────────────────────────────────────────────────────────
+function loadVideo(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
+
+    const fail = (m) => { URL.revokeObjectURL(url); reject(new Error(m)); };
+    v.onerror = () => fail("Videonya nggak kebaca. Coba pakai MP4 (H.264).");
+    v.onloadeddata = () => {
+      const dur = v.duration;
+      if (!isFinite(dur)) return fail("Durasi videonya nggak kebaca.");
+      if (dur < MIN_SEC) return fail(`Videonya cuma ${dur.toFixed(1)} detik.\nMinimal ${MIN_SEC} detik ya.`);
+      resolve({ file, url, video: v, dur, vw: v.videoWidth, vh: v.videoHeight });
+    };
+  });
+}
+
+// Loncat ke waktu t lalu tunggu frame benar-benar tampil
+function seekTo(v, t) {
+  return new Promise((resolve) => {
+    const finish = () => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 40)));
+    if (Math.abs(v.currentTime - t) < 0.001 && v.readyState >= 2) return finish();
+    v.addEventListener("seeked", finish, { once: true });
+    setTimeout(resolve, 3000); // jaga-jaga
+    v.currentTime = t;
+  });
+}
+
+function drawFrame(canvas, v, w, h) {
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(v, 0, 0, w, h);
+}
+
+// ── Resolusi ─────────────────────────────────────────────────────────────────
+function fillRes() {
+  const short = Math.min(src.vw, src.vh);
+  const sel = $("res");
+  sel.innerHTML = "";
+  sel.add(new Option(`Asli (${src.vw}×${src.vh})`, "0"));
+  [1080, 720, 480].filter((r) => r < short).forEach((r) => {
+    const k = r / short;
+    sel.add(new Option(`${r}p (${even(src.vw * k)}×${even(src.vh * k)})`, String(r)));
+  });
+  sel.value = "0";
+  updateResNote();
+}
+
+function target() {
+  const short = Number($("res").value);
+  if (!short) return { w: src.vw, h: src.vh, scaled: false };
+  const k = short / Math.min(src.vw, src.vh);
+  return { w: even(src.vw * k), h: even(src.vh * k), scaled: true };
+}
+
+function pickMime() {
+  if (typeof MediaRecorder === "undefined") return null;
+  return ["video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1.640028", "video/mp4;codecs=avc1.42E01E", "video/mp4;codecs=avc1", "video/mp4"]
+    .find((t) => MediaRecorder.isTypeSupported(t)) || null;
+}
+
+// ── Potong durasi (awal & akhir dalam 1 slider) ─────────────────────────────
+function trimStart() { return Number($("durA").value); }
+function trimEnd()   { return Number($("durB").value); }
+function isTrimmed() { return !!src && (trimStart() > 0.05 || trimEnd() < src.dur - 0.05); }
+
+function updateResNote() {
+  const note = $("resNote");
+  const scaled = !!Number($("res").value);
+  if (!scaled && !isTrimmed()) {
+    note.textContent = "Video dipakai apa adanya, kualitasnya sama kayak aslinya.";
+  } else if (pickMime()) {
+    note.textContent = "Karena resolusi/durasi diubah, video di-encode ulang, jadi prosesnya selama durasi videonya. Suara ikut kalo browser support.";
+  } else {
+    note.textContent = "Browser ini nggak bisa encode MP4, jadi videonya tetap asli (resolusi dan durasi penuh). Cuma foto yang diperkecil.";
+  }
+}
+
+function updateDurLabel() {
+  const a = trimStart(), b = trimEnd();
+  $("durVal").textContent = isTrimmed() ? `${(b - a).toFixed(1)} dtk` : `${src.dur.toFixed(1)} dtk (penuh)`;
+  $("durFrom").textContent = a.toFixed(1) + " dtk";
+  $("durTo").textContent = b.toFixed(1) + " dtk";
+  const fill = $("fill");
+  fill.style.left = (a / src.dur * 100) + "%";
+  fill.style.width = ((b - a) / src.dur * 100) + "%";
+}
+
+function invalidate() { result = null; $("outputs").style.display = "none"; }
+
+// ── Preview frame ────────────────────────────────────────────────────────────
+let seekToken = 0;
+async function updatePreview() {
+  if (!src) return;
+  const t = Number($("frame").value);
+  $("frameVal").textContent = t.toFixed(2);
+  const tok = ++seekToken;
+  await seekTo(src.video, t);
+  if (tok !== seekToken) return;
+  const k = Math.min(1, 960 / Math.max(src.vw, src.vh));
+  drawFrame($("preview"), src.video, Math.round(src.vw * k), Math.round(src.vh * k));
+}
+
+$("frame").addEventListener("input", () => { invalidate(); updatePreview(); });
+$("res").addEventListener("change", () => { invalidate(); updateResNote(); });
+
+// Frame foto harus tetap di dalam bagian video yang dipakai
+function syncFrameRange(follow) {
+  const a = trimStart(), b = trimEnd();
+  const f = $("frame");
+  f.min = String(a); f.max = String(b);
+  let t = Number(f.value);
+  if (follow !== undefined) t = follow;           // gagang yang digeser, preview ikut
+  const c = Math.min(b, Math.max(a, t));
+  if (c !== Number(f.value) || follow !== undefined) { f.value = String(c); updatePreview(); }
+}
+
+function onTrim(which) {
+  invalidate();
+  const A = $("durA"), B = $("durB");
+  let a = Number(A.value), b = Number(B.value);
+  if (which === "A" && b - a < MIN_SEC) { a = Math.max(0, b - MIN_SEC); A.value = String(a); }
+  if (which === "B" && b - a < MIN_SEC) { b = Math.min(src.dur, a + MIN_SEC); B.value = String(b); }
+  // kalau sisa video pas 3 dtk dan mentok, dorong gagang satunya
+  if (b - a < MIN_SEC - 1e-6) {
+    if (which === "A") { b = Math.min(src.dur, a + MIN_SEC); B.value = String(b); }
+    else               { a = Math.max(0, b - MIN_SEC);       A.value = String(a); }
+  }
+  updateDurLabel(); updateResNote();
+  syncFrameRange(which === "A" ? a : b);
+}
+$("durA").addEventListener("input", () => onTrim("A"));
+$("durB").addEventListener("input", () => onTrim("B"));
+
+// ── Preview gerak: tahan fotonya buat mutar (cuma preview video, bukan file live photo) ──
+const pv = $("pv"), stage = $("stage"), poly = document.querySelector(".polaroid");
+let holdTok = 0;
+async function holdStart() {
+  if (!src) return;
+  const tok = ++holdTok;
+  if (pv.getAttribute("src") !== src.url) pv.src = src.url;
+  if (pv.readyState < 2) {
+    await Promise.race([
+      new Promise((r) => pv.addEventListener("loadeddata", r, { once: true })),
+      new Promise((r) => setTimeout(r, 3000))
+    ]);
+  }
+  if (tok !== holdTok) return;
+  await seekTo(pv, trimStart());
+  if (tok !== holdTok) return;
+  try { await pv.play(); } catch (e) { return; }
+  if (tok !== holdTok) { pv.pause(); return; }
+  poly.classList.add("playing");
+  const step = () => {
+    if (tok !== holdTok) return;
+    if (pv.currentTime >= trimEnd() || pv.ended) { holdStop(); return; }
+    requestAnimationFrame(step);
+  };
+  step();
+}
+function holdStop() {
+  holdTok++;
+  pv.pause();
+  poly.classList.remove("playing");
+}
+stage.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  holdStart();
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => stage.addEventListener(ev, holdStop));
+stage.addEventListener("contextmenu", (e) => e.preventDefault());
+stage.addEventListener("keydown", (e) => {
+  if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); holdStart(); }
+});
+stage.addEventListener("keyup", (e) => {
+  if (e.key === " " || e.key === "Enter") holdStop();
+});
+
+// ── Encode ulang video ke resolusi target (real-time via MediaRecorder) ─────
+async function encodeVideo(mime, w, h, startSec, endSec, onProgress) {
+  const v = document.createElement("video");
+  v.muted = true; v.playsInline = true; v.src = src.url;
+  await new Promise((res, rej) => {
+    v.onloadeddata = res;
+    v.onerror = () => rej(new Error("Gagal buka video buat di-encode."));
+  });
+
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  const fps = 30;
+  const stream = c.captureStream(fps);
+
+  // Ambil audio dari video (tanpa diputar lewat speaker)
+  let actx = null;
+  try {
+    v.muted = false;
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    const node = actx.createMediaElementSource(v);
+    const dest = actx.createMediaStreamDestination();
+    node.connect(dest);
+    dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
+    if (actx.state === "suspended") await actx.resume();
+  } catch (e) { v.muted = true; }
+
+  const rec = new MediaRecorder(stream, {
+    mimeType: mime,
+    videoBitsPerSecond: Math.round(Math.min(20e6, Math.max(3e6, w * h * fps * 0.14)))
+  });
+  const chunks = [];
+  rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise((res) => { rec.onstop = res; });
+  let endResolve;
+  const ended = new Promise((res) => { endResolve = res; v.onended = res; });
+
+  const span = Math.max(0.1, endSec - startSec);
+  let raf;
+  const tick = () => {
+    if (v.currentTime >= endSec) { v.pause(); endResolve(); return; }
+    ctx.drawImage(v, 0, 0, w, h);
+    onProgress(Math.min(1, Math.max(0, (v.currentTime - startSec) / span)));
+    raf = requestAnimationFrame(tick);
+  };
+
+  await seekTo(v, startSec);
+  ctx.drawImage(v, 0, 0, w, h);
+  try { await v.play(); }
+  catch (e) { v.muted = true; await v.play(); }   // fallback: tanpa suara
+  rec.start();
+  tick();
+  await ended;
+  ctx.drawImage(v, 0, 0, w, h);
+  await new Promise((r) => setTimeout(r, 150));
+  cancelAnimationFrame(raf);
+  rec.stop();
+  await stopped;
+  if (actx) actx.close();
+  return new Uint8Array(await new Blob(chunks, { type: mime }).arrayBuffer());
+}
+
+// ── Proses ───────────────────────────────────────────────────────────────────
+fileEl.addEventListener("change", async () => {
+  const file = fileEl.files[0];
+  if (!file) return;
+  if (src) URL.revokeObjectURL(src.url);
+  src = null; invalidate(); holdStop(); pv.removeAttribute("src");
+  $("resultCard").style.display = "none";
+  $("pickText").textContent = file.name;
+  setStatus("⏳ Lagi baca video...");
+
+  try {
+    src = await loadVideo(file);
+    for (const id of ["durA", "durB"]) { $(id).min = "0"; $(id).max = String(src.dur); }
+    $("durA").value = "0";
+    $("durB").value = String(src.dur);
+    $("frame").min = "0";
+    $("frame").max = String(src.dur);
+    $("frame").value = "0";
+    updateDurLabel();
+    fillRes();
+    $("resultCard").style.display = "block";
+    await updatePreview();
+    const warn = /mp4/i.test(file.type) ? "" :
+      "\n⚠️ Videonya bukan MP4, bisa jadi nggak gerak pas dibuka.";
+    setStatus(`✅ Video siap: ${src.vw}×${src.vh}, ${src.dur.toFixed(1)} detik\nAtur dulu, terus tekan Buat Live Photo.${warn}`, "ok");
+  } catch (e) {
+    setStatus("❌ " + e.message, "err");
+  }
+});
+
+$("btnBuild").onclick = async () => {
+  if (!src) return;
+  const btn = $("btnBuild");
+  btn.disabled = true; invalidate();
+  try {
+    const t = Number($("frame").value);
+    const { w, h, scaled } = target();
+    const a = trimStart(), b = trimEnd();
+
+    setStatus("⏳ Bikin fotonya...");
+    await seekTo(src.video, t);
+    const c = document.createElement("canvas");
+    drawFrame(c, src.video, w, h);
+    const photo = await new Promise((res, rej) =>
+      c.toBlob((bl) => (bl ? res(bl) : rej(new Error("Gagal bikin foto."))), "image/jpeg", 0.98));
+
+    let mp4, note = "";
+    const trimmed = isTrimmed();
+    const needEnc = scaled || trimmed;
+    const mime = needEnc ? pickMime() : null;
+    if (needEnc && mime) {
+      const msg = (p) => `⏳ Proses video ${Math.round(p * 100)}%\nJangan pindah tab atau kunci layar dulu.`;
+      setStatus(msg(0));
+      mp4 = await encodeVideo(mime, even(w), even(h), trimmed ? a : 0, trimmed ? b : src.dur, (p) => setStatus(msg(p)));
+    } else {
+      mp4 = new Uint8Array(await src.file.arrayBuffer());
+      if (needEnc) note = "\n⚠️ Browser nggak bisa encode MP4, jadi videonya tetap asli (resolusi dan durasi penuh).";
+    }
+
+    const jpg = new Uint8Array(await photo.arrayBuffer());
+    // timestamp selalu 0: video diputar penuh dari awal, walau frame foto dipilih di detik lain
+    const live = makeMotionPhoto(jpg, mp4, 0);
+    const code = String(Math.floor(Math.random() * 1e6)).padStart(6, "0");
+    result = {
+      livePhoto: live, photo,
+      video: new Blob([mp4], { type: "video/mp4" }),
+      name: `potolive${code}`
+    };
+
+    $("outputs").style.display = "block";
+    const warn = /mp4/i.test(src.file.type) ? "" :
+      "\n⚠️ Videonya bukan MP4, bisa jadi nggak gerak pas dibuka.";
+    setStatus(`✅ Jadi! Foto ${w}×${h}, ${(live.size / 1048576).toFixed(1)} MB${note}${warn}`, "ok");
+    $("outputs").scrollIntoView({ block: "center", behavior: "smooth" });
+  } catch (e) {
+    setStatus("❌ " + e.message, "err");
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+function download(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
+$("btnSave").onclick  = () => result && download(result.livePhoto, `${result.name}.jpg`);
+$("btnPhoto").onclick = () => result && download(result.photo, `${result.name}_foto.jpg`);
+$("btnVideo").onclick = () => result && download(result.video, `${result.name}.mp4`);
+$("btnShare").onclick = async () => {
+  if (!result) return;
+  const f = new File([result.livePhoto], `${result.name}.jpg`, { type: "image/jpeg" });
+  if (navigator.canShare && navigator.canShare({ files: [f] })) {
+    try { await navigator.share({ files: [f] }); } catch {}
+  } else {
+    setStatus("Fitur bagikan nggak support di sini, pakai tombol Simpan aja.", "err");
+  }
+};
+
+// expose untuk testing
+window.__lp = { makeMotionPhoto, buildXmp };
+</script>
+</body>
+</html>
