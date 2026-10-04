@@ -1,0 +1,62 @@
+[
+  {
+    "file": "live-photo.html",
+    "title": "Live Photo",
+    "emoji": "📸",
+    "color": "indigo"
+  },
+  {
+    "file": "tool1.html",
+    "title": "Kalkulator",
+    "emoji": "🧮",
+    "color": "orange"
+  },
+  {
+    "file": "tool2.html",
+    "title": "Hitung Tanggal",
+    "emoji": "🗓️",
+    "color": "red"
+  },
+  {
+    "file": "tool3.html",
+    "title": "Pemilih Warna",
+    "emoji": "🎨",
+    "color": "pink"
+  },
+  {
+    "file": "tool4.html",
+    "title": "Catatan",
+    "emoji": "📝",
+    "color": "yellow"
+  },
+  {
+    "file": "tool5.html",
+    "title": "Stopwatch & Timer",
+    "emoji": "⏱️",
+    "color": "dark"
+  },
+  {
+    "file": "tool6.html",
+    "title": "Generator Password",
+    "emoji": "🔐",
+    "color": "green"
+  },
+  {
+    "file": "tool7.html",
+    "title": "Konverter Satuan",
+    "emoji": "📏",
+    "color": "teal"
+  },
+  {
+    "file": "tool8.html",
+    "title": "Penghitung Kata",
+    "emoji": "🔤",
+    "color": "indigo"
+  },
+  {
+    "file": "tool11.html",
+    "title": "Filter",
+    "emoji": "📷",
+    "color": "blue"
+  }
+]
