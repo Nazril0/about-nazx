@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hitung Tanggal</title>
+<link rel="stylesheet" href="ios.css">
+<style>
+  .hero{background:linear-gradient(160deg,#FF9F0A,#FF453A);color:#fff;border-radius:22px;padding:22px 20px;margin-top:18px;box-shadow:0 14px 30px rgba(255,69,58,.25)}
+  .hero small{font-size:14px;opacity:.85}
+  .hero b{display:block;font-size:56px;font-weight:700;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums;margin:4px 0 2px}
+  .hero p{font-size:16px;opacity:.95}
+  .stepper{display:flex;align-items:center;background:var(--fill);border-radius:9px;overflow:hidden}
+  .stepper button{width:46px;height:34px;font-size:22px;color:var(--label)}
+  .stepper button:active{background:var(--fill2)}
+  .stepper i{width:1px;height:18px;background:var(--label3)}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="title">Hitung Tanggal</h1>
+  <div class="seg" id="mode"><button type="button">Selisih</button><button type="button">Tambah / kurang</button></div>
+
+  <!-- Selisih -->
+  <section id="p-diff">
+    <div class="group" style="margin-top:18px">
+      <label class="cell"><span class="lbl">Dari</span><input type="date" id="d1"></label>
+      <label class="cell"><span class="lbl">Sampai</span><input type="date" id="d2"></label>
+    </div>
+    <div class="hero" aria-live="polite">
+      <small>Selisih</small>
+      <b id="diffDays">0 hari</b>
+      <p id="diffText"></p>
+    </div>
+    <div class="tiles" style="margin-top:10px">
+      <div class="tile"><small>Minggu</small><b id="tWeeks">0</b></div>
+      <div class="tile"><small>Jam</small><b id="tHours">0</b></div>
+    </div>
+  </section>
+
+  <!-- Tambah -->
+  <section id="p-add" class="hide">
+    <div class="group" style="margin-top:18px">
+      <label class="cell"><span class="lbl">Mulai</span><input type="date" id="d3"></label>
+      <div class="cell">
+        <span class="lbl grow">Jumlah hari</span>
+        <input type="number" id="n" value="30" inputmode="numeric" style="max-width:90px;flex:none">
+        <div class="stepper"><button type="button" id="minus" aria-label="Kurangi">−</button><i></i><button type="button" id="plus" aria-label="Tambah">+</button></div>
+      </div>
+    </div>
+    <p class="ftr">Angka negatif berarti mundur ke masa lalu.</p>
+    <div class="hero" aria-live="polite" style="background:linear-gradient(160deg,#5E5CE6,#0A84FF);box-shadow:0 14px 30px rgba(10,132,255,.25)">
+      <small>Hasil</small>
+      <b id="addRes" style="font-size:40px">-</b>
+      <p id="addDay"></p>
+    </div>
+    <div class="btn-row" style="margin-top:12px;white-space:nowrap">
+      <button class="btn tint" type="button" style="padding:0 6px;font-size:15px" data-q="7">+7 hari</button>
+      <button class="btn tint" type="button" style="padding:0 6px;font-size:15px" data-q="30">+30 hari</button>
+      <button class="btn tint" type="button" style="padding:0 6px;font-size:15px" data-q="100">+100 hari</button>
+    </div>
+  </section>
+</div>
+<script src="ios.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const MS = 86400000;
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+  const dim = (y, m) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const nf = new Intl.NumberFormat('id-ID');
+  const today = new Date(); const t0 = iso(new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())));
+  const plural = (n, s) => `${n} ${s}`;
+
+  $('d1').value = t0;
+  $('d2').value = iso(new Date(parse(t0).getTime() + 30 * MS));
+  $('d3').value = t0;
+
+  const diff = () => {
+    if (!$('d1').value || !$('d2').value) return;
+    let a = parse($('d1').value), b = parse($('d2').value);
+    if (a > b) [a, b] = [b, a];
+    const days = Math.round((b - a) / MS);
+    $('diffDays').textContent = `${nf.format(days)} hari`;
+    let y = b.getUTCFullYear() - a.getUTCFullYear(), m = b.getUTCMonth() - a.getUTCMonth(), d = b.getUTCDate() - a.getUTCDate();
+    if (d < 0) { m--; d += dim(b.getUTCFullYear(), b.getUTCMonth() - 1); }
+    if (m < 0) { y--; m += 12; }
+    const parts = [];
+    if (y) parts.push(plural(y, 'tahun')); if (m) parts.push(plural(m, 'bulan')); if (d || !parts.length) parts.push(plural(d, 'hari'));
+    const short = (x) => x.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    $('diffText').textContent = (y || m) ? parts.join(', ') : `${short(a)} sampai ${short(b)}`;
+    $('tWeeks').textContent = nf.format(Math.floor(days / 7)) + (days % 7 ? ` +${days % 7}h` : '');
+    $('tHours').textContent = nf.format(days * 24);
+  };
+  const add = () => {
+    if (!$('d3').value) return;
+    const n = parseInt($('n').value, 10) || 0;
+    const r = new Date(parse($('d3').value).getTime() + n * MS);
+    $('addRes').textContent = r.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    $('addDay').textContent = r.toLocaleDateString('id-ID', { weekday: 'long', timeZone: 'UTC' });
+  };
+  ['d1', 'd2'].forEach((i) => $(i).addEventListener('input', diff));
+  ['d3', 'n'].forEach((i) => $(i).addEventListener('input', add));
+  $('minus').onclick = () => { $('n').value = (parseInt($('n').value, 10) || 0) - 1; add(); iOS.buzz(); };
+  $('plus').onclick = () => { $('n').value = (parseInt($('n').value, 10) || 0) + 1; add(); iOS.buzz(); };
+  document.querySelectorAll('[data-q]').forEach((b) => b.addEventListener('click', () => { $('n').value = b.dataset.q; add(); }));
+  iOS.seg($('mode'), (i) => { $('p-diff').classList.toggle('hide', i !== 0); $('p-add').classList.toggle('hide', i !== 1); });
+  diff(); add();
+})();
+</script>
+</body>
+</html>
