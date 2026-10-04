@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nazx — Personal Space</title>
+<meta name="description" content="Pojok kecil Nazx di internet. Instagram, TikTok, dan ID Mobile Legends ada di sini. Mabar ml yok!">
+<meta name="theme-color" content="#F2F2F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nazx">
+<link rel="apple-touch-icon" href="images/avatar.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Nazx — Personal Space">
+<meta property="og:description" content="Pojok kecil Nazx di internet. Mabar ml yok!">
+<meta property="og:image" content="images/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nazx — Personal Space">
+<meta name="twitter:description" content="Pojok kecil Nazx di internet. Mabar ml yok!">
+<meta name="twitter:image" content="images/og.jpg">
+<link rel="icon" href="images/avatar.png" type="image/png">
+<link rel="stylesheet" href="style.css?v=6">
+</head>
+<body class="is-locked">
+<div class="bg" aria-hidden="true"></div>
+
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="Selamat datang">
+  <div class="gate-inner">
+    <div class="gate-icon" aria-hidden="true">🍍</div>
+    <h2>Nazxxx</h2>
+    <button class="gate-btn" id="gateBtn" type="button">Masuk</button>
+  </div>
+</div>
+
+<!-- Bar atas -->
+<header class="navbar" id="navbar">
+  <span class="nav-title" id="navTitle">Profil</span>
+  <button class="nav-music" id="navMusic" type="button" aria-label="Putar musik latar" aria-pressed="false">
+    <svg class="note" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
+    <span class="eqb" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  </button>
+</header>
+
+<!-- Sidebar (desktop) / tab bar (mobile) — dibuat otomatis dari collections.json -->
+<aside class="sidebar" id="sidebar">
+  <div class="side-brand"><span aria-hidden="true">🍍</span>Nazx</div>
+  <nav class="side-nav" id="sideNav" aria-label="Halaman"></nav>
+</aside>
+
+<div class="content">
+<main id="main">
+
+  <!-- PROFIL -->
+  <section class="view" id="view-profil" data-view="profil">
+    <div class="profile">
+      <div class="avatar-wrap reveal">
+        <img class="avatar" src="images/avatar.png" width="120" height="120" alt="Foto profil Nazx: kelinci menunggang unicorn di depan pelangi">
+        <span class="status-dot" role="img" aria-label="Online"></span>
+      </div>
+      <h1 class="reveal">Nazx</h1>
+      <p class="sub reveal">Mabar yok bg :v</p>
+      <div class="actions reveal">
+        <button class="act" id="musicBtn" type="button" aria-label="Putar musik latar" aria-pressed="false">
+          <span class="act-ic" id="musicIcon">
+            <svg class="note" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
+            <span class="eqb" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          </span>
+          <span id="musicText">Musik</span>
+        </button>
+        <a class="act" href="https://www.instagram.com/nazzxx._0" target="_blank" rel="noopener" aria-label="Instagram @nazzxx._0">
+          <span class="act-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3.5"/><path d="M8 7l1.5-2.5h5L16 7"/><circle cx="12" cy="13.5" r="3.5"/></svg></span>Instagram
+        </a>
+        <a class="act" href="https://www.tiktok.com/@nazxtampan__" target="_blank" rel="noopener" aria-label="TikTok @nazxtampan__">
+          <span class="act-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="3.5"/><path d="M16 10.5l5-3v9l-5-3z"/></svg></span>TikTok
+        </a>
+        <button class="act" type="button" data-copy="1473347137" aria-label="Salin ID Mobile Legends">
+          <span class="act-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 10.5v3M6.5 12h3"/><circle cx="15.5" cy="11.2" r=".8" fill="currentColor"/><circle cx="17.5" cy="13" r=".8" fill="currentColor"/></svg></span>Salin ID
+        </button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <h2 class="hdr reveal">A little about me ✨</h2>
+      <div class="group reveal"><div class="cell"><p>Hy Aku Nazx, aku suka scroll tiktok sama main mlbb😉.</p></div></div>
+
+      <h2 class="hdr reveal">Things I like</h2>
+      <ul class="chips reveal" id="pills">
+        <li><button type="button" aria-pressed="false">🎮 Mobile Legends</button></li>
+        <li><button type="button" aria-pressed="false">☂️ Kagura</button></li>
+        <li><button type="button" aria-pressed="false">🍗 Ayam Geprek</button></li>
+        <li><button type="button" aria-pressed="false">🎧 Billie Eilish</button></li>
+        <li><button type="button" aria-pressed="false">🍿 Movie</button></li>
+        <li><button type="button" aria-pressed="false">🎵 TikTok</button></li>
+        <li><button type="button" aria-pressed="false">🍵 Matcha</button></li>
+      </ul>
+
+      <h2 class="hdr reveal">Currently</h2>
+      <div class="group reveal">
+        <div class="cell"><span class="sq g-pink" aria-hidden="true">🎧</span><span class="t"><b>Song</b></span><span class="v">Ocean Eyes</span></div>
+        <div class="cell"><span class="sq g-green" aria-hidden="true">🎮</span><span class="t"><b>Fav Game</b></span><span class="v">Mobile Legends</span></div>
+        <div class="cell"><span class="sq g-blue" aria-hidden="true">👤</span><span class="t"><b>My gender</b></span><span class="v">Male</span></div>
+      </div>
+
+
+      <h2 class="hdr reveal">Find me here 🔗</h2>
+      <div class="group reveal">
+        <a class="cell" href="https://www.instagram.com/nazzxx._0" target="_blank" rel="noopener">
+          <span class="sq lg g-insta" aria-hidden="true">📸</span>
+          <span class="t"><b>Instagram</b><small>@nazzxx._0</small></span>
+          <svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6"/></svg>
+        </a>
+        <a class="cell" href="https://www.tiktok.com/@nazxtampan__" target="_blank" rel="noopener">
+          <span class="sq lg g-dark" aria-hidden="true">🎵</span>
+          <span class="t"><b>TikTok</b><small>@nazxtampan__</small></span>
+          <svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l6 6-6 6"/></svg>
+        </a>
+        <button class="cell" id="copyId" type="button" data-copy="1473347137">
+          <span class="sq lg g-orange" aria-hidden="true">🎮</span>
+          <span class="t"><b>Mobile Legends</b><small>1473347137 · ketuk untuk salin</small></span>
+          <svg class="copy-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="view" id="view-gallery" data-view="gallery" hidden>
+    <div class="wrap wide">
+      <h2 class="large">My little gallery 🖼️</h2>
+      <div class="gallery" id="galleryList"></div>
+    </div>
+  </section>
+
+  <!-- Halaman Game / Tools dibuat otomatis oleh script.js dari collections.json -->
+</main>
+<footer class="footer"><p>Nazx 🍍</p></footer>
+</div>
+
+<div class="peek" id="peek" role="dialog" aria-modal="true" aria-label="Detail foto">
+  <img class="peek-img" id="peekImg" alt="">
+  <div class="peek-menu">
+    <div class="peek-info"><b id="peekTitle"></b><p id="peekDesc"></p></div>
+    <button class="peek-act" id="peekOpen" type="button">Buka foto <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="peek-act" id="peekClose" type="button">Tutup <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+</div>
+
+<dialog class="lightbox" id="lightbox" aria-label="Pratinjau foto">
+  <button class="close" id="lbClose" type="button">Selesai</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+</dialog>
+
+<dialog class="sheet" id="player" aria-label="Buka isi">
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <header class="sheet-hd">
+    <a class="sh-open" id="plOpen" href="#" target="_blank" rel="noopener" aria-label="Buka di tab baru">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>
+    </a>
+    <b id="plTitle"></b>
+    <button class="sh-done" id="plClose" type="button">Selesai</button>
+  </header>
+  <iframe id="plFrame" title="Isi" allow="autoplay; fullscreen; gamepad; clipboard-write; web-share" src="about:blank"></iframe>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<audio id="bgm" src="audio/background.mp3" loop playsinline preload="auto" muted autoplay></audio>
+<style>
+/* Tahan lama pada foto galeri: pratinjau + menu ala iOS */
+.g-open{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.g-open img{-webkit-user-drag:none;pointer-events:none}
+.g-open.pressing{transform:scale(.95);transition:transform .45s cubic-bezier(.2,.8,.3,1)}
+.peek{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s .25s}
+.peek.show{opacity:1;visibility:visible;transition:opacity .25s ease}
+.peek-img{max-width:min(520px,100%);max-height:56vh;width:auto;height:auto;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.4);transform:scale(.82);transition:transform .45s cubic-bezier(.32,1.25,.4,1)}
+.peek.show .peek-img{transform:none}
+.peek-menu{width:min(300px,100%);background:rgba(250,250,252,.82);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25);
+  transform:translateY(12px) scale(.94);opacity:0;transition:transform .45s cubic-bezier(.32,1.25,.4,1) .05s,opacity .25s ease .05s}
+.peek.show .peek-menu{transform:none;opacity:1}
+.peek-info{padding:14px 16px}
+.peek-info b{display:block;font-size:17px;font-weight:600;color:#000}
+.peek-info p{margin-top:4px;font-size:14.5px;line-height:1.4;color:rgba(60,60,67,.75);white-space:pre-line}
+.peek-act{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;font-size:17px;color:#000;border-top:.5px solid rgba(60,60,67,.18);text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;cursor:pointer;font-family:inherit}
+.peek-act:active{background:rgba(120,120,128,.18)}
+.peek-act svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(prefers-reduced-motion:reduce){.peek,.peek-img,.peek-menu{transition:none}}
+</style>
+<script src="gallery/gallery.js?v=5"></script>
+<script>
+/* Galeri: membaca daftar dari gallery/gallery.js (window.GALLERY). Berdiri sendiri, tidak tergantung script.js */
+(function () {
+  function init() {
+    var box = document.getElementById('galleryList');
+    if (!box) return;
+    var peek = document.getElementById('peek');
+    var showPeek = function (d) {
+      document.getElementById('peekImg').src = d.url; document.getElementById('peekImg').alt = d.alt;
+      document.getElementById('peekTitle').textContent = d.title;
+      var p = document.getElementById('peekDesc'); p.textContent = d.desc; p.style.display = d.desc ? '' : 'none';
+      document.getElementById('peekOpen').onclick = function () { hidePeek(); d.open(); };
+      peek.classList.add('show');
+      try { navigator.vibrate && navigator.vibrate(12); } catch (_) {}
+    };
+    var hidePeek = function () { peek.classList.remove('show'); };
+    peek.addEventListener('click', function (e) { if (e.target === peek) hidePeek(); });
+    document.getElementById('peekClose').onclick = hidePeek;
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hidePeek(); });
+    window.addEventListener('hashchange', hidePeek);
+    var lb = document.getElementById('lightbox'), lbImg = document.getElementById('lbImg'), lbCap = document.getElementById('lbCap');
+    var lbClose = document.getElementById('lbClose');
+    if (lbClose) lbClose.onclick = function () { lb.close(); };
+    if (lb) lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
+    function say(t) { box.innerHTML = ''; var p = document.createElement('p'); p.className = 'gallery-empty'; p.textContent = t; box.appendChild(p); }
+    if (!Array.isArray(window.GALLERY)) { say('⚠️ File gallery/gallery.js tidak terbaca. Pastikan folder gallery ikut di-upload.'); return; }
+    var items = window.GALLERY.map(function (x) { return typeof x === 'string' ? { file: x } : x; }).filter(function (x) { return x && x.file; });
+    if (!items.length) { say('🌱 Belum ada foto'); return; }
+    items.forEach(function (it) {
+      var url = /^(https?:)?\/\//.test(it.file) || it.file.charAt(0) === '/' ? it.file : 'gallery/' + it.file.split('/').map(encodeURIComponent).join('/');
+      var cap = it.caption || '';
+      var fig = document.createElement('figure'); fig.className = 'g';
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'g-open';
+      var img = document.createElement('img'); img.src = url; img.alt = it.alt || cap || 'Foto galeri';
+      img.onload = function () { if (img.naturalWidth / img.naturalHeight > 1.4) fig.classList.add('wide'); };
+      img.onerror = function () { fig.innerHTML = '<p class="gallery-empty">⚠️ Foto tidak ketemu: ' + it.file + '</p>'; };
+      btn.appendChild(img);
+      var openFull = function () { lbImg.src = url; lbImg.alt = img.alt; lbCap.textContent = cap; lb.showModal(); };
+      var info = { url: url, alt: img.alt, title: cap || 'Foto', desc: it.desc || it.alt || '', open: openFull };
+      var timer = null, sx = 0, sy = 0, held = false;
+      var stop = function () { clearTimeout(timer); btn.classList.remove('pressing'); };
+      btn.addEventListener('pointerdown', function (e) {
+        held = false; sx = e.clientX; sy = e.clientY; btn.classList.add('pressing');
+        timer = setTimeout(function () { held = true; btn.classList.remove('pressing'); showPeek(info); }, 450);
+      });
+      btn.addEventListener('pointermove', function (e) { if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) stop(); });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { btn.addEventListener(ev, stop); });
+      btn.addEventListener('contextmenu', function (e) { e.preventDefault(); if (!peek.classList.contains('show')) { held = true; showPeek(info); } });
+      btn.addEventListener('click', function () { if (held) { held = false; return; } openFull(); });
+      fig.appendChild(btn);
+      if (cap) { var fc = document.createElement('figcaption'); fc.textContent = cap; fig.appendChild(fc); }
+      box.appendChild(fig);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script src="script.js?v=6"></script>
+</body>
+</html>
