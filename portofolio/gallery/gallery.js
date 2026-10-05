@@ -7,5 +7,7 @@ window.GALLERY = [
   {"file": "ml-profile.jpg", "caption": "Profil ML", "desc": "Halaman profil Mobile Legends: rank, medali, dan hero favorit.", "alt": "Halaman profil Mobile Legends milik Nazxx dengan rank, medali, dan hero berkostum ungu"},
 {"file": "skin-legend.jpg", "caption": "Skin Legend Pertama", "desc": "Seneng bener jirr,pertama kali dapetin skin legend 😭😭😭.", "alt": "Skin Legend Pertama😭😭"},
 {"file": "history.jpg", "caption": "History gw nih🤭", "desc": "FULL MVP NIH BOSS", "alt": "History gw"},
-{"file": "pat.jpg", "caption": "gatau", "desc": "hmm", "alt": "hmm"}
+{"file": "pat.jpg", "caption": "gatau", "desc": "hmm", "alt": "hmm"},
+{"file": "jid.jpg", "caption": "sparing ama kampung sebelah", "desc": "bot banget jirrr🤭🤭", "alt": "Hasil sparing game1"},
+{"file": "jid2.jpg", "caption": "game 2", "desc": "musuh nya tetep bot🤭", "alt": "game2 sparing"}
 ];
