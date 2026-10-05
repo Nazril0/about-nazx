@@ -139,10 +139,11 @@
   // Bisa ditutup dengan: tombol Selesai, ketuk area kosong di atas, tarik header ke bawah,
   // tombol Kembali (HP / browser), atau tombol Esc.
   const player = $('player'), frame = $('plFrame');
-  let resumeMusic = false, pushed = false;
+  let resumeMusic = false, pushed = false, pendingBack = 0, lastClosed = 0;
   // replace() supaya membuka isi tidak menambah riwayat browser (tombol Kembali jadi pas)
   const setFrame = (url) => { try { frame.contentWindow.location.replace(url); } catch (_) { frame.src = url; } };
   const openItem = (c, g) => {
+    if (player.open || Date.now() - lastClosed < 400) return;   // cegah buka dobel / ketukan hantu setelah tutup
     resumeMusic = isPlaying();          // musik dimatikan selama main, lanjut lagi setelah ditutup
     bgm.pause();
     const url = `${c.dir}/${encodeURIComponent(g.file)}`;
@@ -153,20 +154,28 @@
     player.showModal();
     try { history.pushState({ sheet: 1 }, ''); pushed = true; } catch (_) { pushed = false; }
   };
+  // Tutup langsung (tanpa jeda animasi) supaya tidak ada ketukan/Kembali yang menumpuk
   const closeSheet = () => {
-    if (!player.open || player.classList.contains('closing')) return;
-    player.classList.add('closing');
-    setTimeout(() => { player.classList.remove('closing'); player.style.transform = ''; player.close(); }, reduce ? 0 : 290);
+    if (!player.open) return;
+    player.classList.remove('closing');
+    player.style.transform = '';
+    player.close();
   };
   $('plClose').addEventListener('click', closeSheet);
   player.addEventListener('click', (e) => { if (e.target === player) closeSheet(); });   // ketuk area kosong di atas
   player.addEventListener('cancel', (e) => { e.preventDefault(); closeSheet(); });        // tombol Esc
   addEventListener('popstate', () => {                                                    // tombol Kembali
+    if (pendingBack > 0) { pendingBack--; return; }   // popstate dari history.back() buatan kita sendiri -> abaikan
     if (pushed && player.open) { pushed = false; closeSheet(); }
   });
   player.addEventListener('close', () => {
+    lastClosed = Date.now();
     setFrame('about:blank');
-    if (pushed) { pushed = false; try { history.back(); } catch (_) {} }   // rapikan riwayat kalau ditutup lewat cara lain
+    if (pushed) {                                      // rapikan riwayat kalau ditutup lewat tombol/cara lain
+      pushed = false; pendingBack++;
+      try { history.back(); } catch (_) { pendingBack--; }
+      setTimeout(() => { if (pendingBack > 0) pendingBack--; }, 800);   // jaga-jaga popstate tidak pernah datang
+    }
     if (resumeMusic) { resumeMusic = false; startAudible(); }
   });
 
