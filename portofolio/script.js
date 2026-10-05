@@ -138,10 +138,22 @@
   /* ---------- Sheet pemutar ---------- */
   // Bisa ditutup dengan: tombol Selesai, ketuk area kosong di atas, tarik header ke bawah,
   // tombol Kembali (HP / browser), atau tombol Esc.
-  const player = $('player'), frame = $('plFrame');
+  const player = $('player');
+  let frame = $('plFrame');
   let resumeMusic = false, pushed = false, pendingBack = 0, lastClosed = 0;
-  // replace() supaya membuka isi tidak menambah riwayat browser (tombol Kembali jadi pas)
-  const setFrame = (url) => { try { frame.contentWindow.location.replace(url); } catch (_) { frame.src = url; } };
+  // Tiap kali buka/tutup, iframe diganti yang baru (bukan diarahkan ulang) supaya isi lama
+  // (mis. tools sebelumnya) tidak sempat muncul sekejap sebelum game yang dipilih tampil.
+  // Iframe baru juga tidak menambah riwayat browser, jadi tombol Kembali tetap pas.
+  const setFrame = (url) => {
+    const f = document.createElement('iframe');
+    f.id = 'plFrame';
+    f.title = frame.title || 'Isi';
+    const allow = frame.getAttribute('allow');
+    if (allow) f.setAttribute('allow', allow);
+    f.src = url;
+    frame.replaceWith(f);
+    frame = f;
+  };
   const openItem = (c, g) => {
     if (player.open || Date.now() - lastClosed < 400) return;   // cegah buka dobel / ketukan hantu setelah tutup
     resumeMusic = isPlaying();          // musik dimatikan selama main, lanjut lagi setelah ditutup
